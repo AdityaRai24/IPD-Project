@@ -18,18 +18,17 @@ const Navbar = async () => {
               </Link>
             </li>
             <div className="flex items-center gap-10 ml-8">
-              <li>
-                {" "}
-                <Link href="/">Home</Link>
-              </li>
-              <li>
-                {" "}
-                <Link href="/about">About</Link>
-              </li>
-              <li>
-                {" "}
-                <Link href="/contact">Contact us</Link>
-              </li>
+              <Button variant="link" className="h-12 text-[17px]">
+                <Link href="/" className="font-semibold">Home</Link>
+              </Button>
+              
+              <Button variant="link" className="h-12 text-[17px]">
+                <Link href="/about" className="font-semibold">About</Link>
+              </Button>
+
+              <Button variant="link" className="h-12 text-[17px]">
+                <Link href="/contact" className="font-semibold">Contact us</Link>
+              </Button>
             </div>
           </ul>
         </div>
