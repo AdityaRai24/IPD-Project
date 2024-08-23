@@ -169,7 +169,7 @@ const JobSeekerPage = () => {
                     <Input
                       placeholder="Enter Your College Name"
                       type="tel"
-                      {...field}
+                      {...field}x
                     />
                   </FormControl>
                   <FormMessage />
