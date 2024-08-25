@@ -14,7 +14,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import UploadImage from "@/components/UploadImage"
+import UploadImage from "@/components/uploads/UploadImage"
+
 
 
 
@@ -89,7 +90,7 @@ const RecruiterPage = () => {
             );
           }}
         />
-          <UploadImage/>
+          <UploadImage />
         <Button type="submit">Submit</Button>
       </form>
     </Form>
