@@ -58,7 +58,7 @@ const JobSeekerPage = () => {
   });
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-secondary ">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-secondary">
       <div className="w-full max-w-2xl bg-white p-8 rounded-lg shadow-lg">
         <h1 className="text-2xl font-bold text-gray-700 mb-6">Job Seeker Form</h1>
         <Form {...form}>
