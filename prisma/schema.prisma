@@ -46,3 +46,11 @@ model Account {
 
   @@unique([provider, providerAccountId])
 }
+
+model Question {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  jsonMockResp String
+  mockId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
