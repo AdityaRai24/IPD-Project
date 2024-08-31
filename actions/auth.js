@@ -1,57 +1,61 @@
 "use server";
 import { signIn, signOut } from "@/lib/auth";
-import db from "@/lib/db";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export const login = async (provider) => {
-  await signIn(provider, { redirect: "/" });
-  revalidatePath("/");
+  await signIn(provider, { callbackUrl: "/" });
+  revalidatePath("/authenticate");
 };
 
 export const logout = async () => {
-  await signOut({ redirectTo: "/" });
-  revalidatePath("/");
+  await signOut({ callbackUrl: "/" });
+  redirect("/authenticate")
 };
-
-
 
 export const loginWithCredentials = async (formData) => {
   const rawFormData = {
     emailId: formData.get("emailId"),
     password: formData.get("password"),
-    isRegistering: false,
+    isRegistering: "false",
   };
 
   try {
-   await signIn("credentials", rawFormData);
-    
+    await signIn("credentials", { ...rawFormData, callbackUrl: "/" });
+    revalidatePath("/authenticate");
   } catch (error) {
-    console.log(error)
-  }
-    
-};
-
-export const registerWithCredentials = async (formData) => {
-  const rawFormData = {
-    emailId: formData.get("emailId"),
-    password: formData.get("password"),
-    isRegistering: true,
-  };
-
-  try {
-    await signIn("credentials", rawFormData, { redirect: false });
-  } catch (error) {
-    console.log(error,"error in register credentials")
     if (error instanceof AuthError) {
       switch (error.type) {
-        case "CredentialsSignIn":
-          return { error: "Invalid Credentials" };
+        case "AuthError":
+          return { error: error.cause };
         default:
           return { error: "Something went wrong" };
       }
     }
     throw error;
   }
-  revalidatePath("/");
+};
+
+export const registerWithCredentials = async (formData) => {
+  const rawFormData = {
+    emailId: formData.get("emailId"),
+    password: formData.get("password"),
+    isRegistering: "true",
+  };
+
+  try {
+    await signIn("credentials", { ...rawFormData, callbackUrl: "/" });
+    revalidatePath("/authenticate");
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "AuthError":
+          return { error: error.cause };
+        default:
+          return { error: "Something went wrong" };
+      }
+    }
+    throw error;
+  }
 };

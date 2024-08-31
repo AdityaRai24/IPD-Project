@@ -1,12 +1,17 @@
-"use client"
-import React from 'react'
-import { Button } from '../ui/button'
-import { logout } from '@/actions/auth'
+"use client";
+import { useSession } from "next-auth/react";
+import { logout } from "@/actions/auth";
+import { Button } from "../ui/button";
 
 const User = () => {
-  return (
-    <Button onClick={()=>logout()}>Logout</Button>
-  )
-}
+  const { data: session } = useSession();
 
-export default User
+  return (
+    <div>
+      <span>{session?.user?.email}</span>
+      <Button onClick={() => logout()}>Logout</Button>
+    </div>
+  );
+};
+
+export default User;

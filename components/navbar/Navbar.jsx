@@ -1,10 +1,20 @@
+"use client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import User from "./User";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 
-const Navbar = async () => {
-  const session = await auth();
+const Navbar = () => {
+  const { data: session, status } = useSession();
+  console.log(session,status)
+  useEffect(() => {
+    if (status === "loading") return; // Do nothing while loading
+    if (status === "unauthenticated" && session) {
+      signIn("credentials"); // Re-fetch session data if not authenticated
+    }
+  }, [status, session]);
 
   return (
     <div className="border-b border-primary/30">
@@ -19,15 +29,21 @@ const Navbar = async () => {
             </li>
             <div className="flex items-center gap-10 ml-8">
               <Button variant="link" className="h-12 text-[17px]">
-                <Link href="/" className="font-semibold">Home</Link>
-              </Button>
-              
-              <Button variant="link" className="h-12 text-[17px]">
-                <Link href="/about" className="font-semibold">About</Link>
+                <Link href="/" className="font-semibold">
+                  Home
+                </Link>
               </Button>
 
               <Button variant="link" className="h-12 text-[17px]">
-                <Link href="/contact" className="font-semibold">Contact us</Link>
+                <Link href="/about" className="font-semibold">
+                  About
+                </Link>
+              </Button>
+
+              <Button variant="link" className="h-12 text-[17px]">
+                <Link href="/contact" className="font-semibold">
+                  Contact us
+                </Link>
               </Button>
             </div>
           </ul>
