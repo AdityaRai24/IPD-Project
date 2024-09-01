@@ -13,16 +13,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  JOB_SEEKER
+  RECRUITER
+}
+
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   password      String?
   emailVerified DateTime?
   image         String?
   accounts      Account[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  role          UserRole?   @default(JOB_SEEKER) 
+  jobSeeker     JobSeeker?
+  recruiter     Recruiter?
 }
 
 model Account {
@@ -45,4 +53,39 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+}
+
+model JobSeeker {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String   @unique @db.ObjectId
+  user               User     @relation(fields: [userId], references: [id])
+  phoneNumber        String?
+  dateOfBirth        String?
+  location           String?
+  collegeName        String?
+  currentJobTitle    String?
+  currentCompany     String?
+  desiredJobTitle    String?
+  desiredSalaryRange String?
+  employmentType     String?
+  skills             String[]
+  linkedinUrl        String?
+  resumeUrl          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Recruiter {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @unique @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id])
+  companyName    String?
+  jobTitle       String?
+  phoneNumber    String?
+  linkedinUrl    String?
+  companyWebsite String?
+  industry       String?
+  companyLogo    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

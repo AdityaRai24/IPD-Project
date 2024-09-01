@@ -1,44 +1,75 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { BriefcaseBusiness, Handshake } from "lucide-react";
-import React from "react";
+"use client";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ArrowRight, BriefcaseBusiness, Handshake } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 
 const page = () => {
+  const [selected, setSelected] = useState("");
+
+  const router = useRouter()
+
   return (
-    <>
-      <div className="flex items-center justify-center gap-16 mt-32">
-        <Card className="cursor-pointer w-[450px] h-[300px] hover:scale-[1.025] hover:border-2 hover:border-primary transition duration-300 ease-in shadow-lg">
-          <CardHeader className="flex flex-col items-center justify-center">
-            <BriefcaseBusiness className="h-16 w-16" />
-            <h1 className="text-2xl font-bold ">Job Seeker</h1>
-            <p className="text-gray-600">
-              Utilize this platform to create a strong profile highlighting your
-              skills and experience. Carefully apply to relevant job postings
-              and engage proactively with recruiters. Leverage the features to
-              stay informed about new opportunities.
-            </p>
-          </CardHeader>
-        </Card>
-        <Card className="cursor-pointer w-[450px] h-[300px] hover:scale-[1.025] hover:border-2 hover:border-primary transition duration-300 ease-in shadow-lg">
-          <CardHeader className="flex flex-col items-center justify-center">
-            <Handshake className="h-16 w-16 " />
-            <h1 className="text-2xl font-bold ">Recruiter</h1>
-            <p className="text-gray-600">
-              Efficiently manage job postings, candidate screening, and
-              selection using the platform's intuitive tools. Identify qualified
-              candidates through the search and filtering capabilities. Provide
-              timely feedback to foster a positive recruitment experience.
-            </p>
-          </CardHeader>
-        </Card>
+    <div className="mt-24">
+      <h1 className="text-center text-4xl font-bold tracking-normal">
+        Choose your <span className="text-primary">Account Type</span>
+        <img
+          src="/dual-underline.svg"
+          className="w-[190px] absolute right-[35%]"
+          alt=""
+        />
+      </h1>
+
+      <div className="flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-5 max-w-xl mt-8">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div
+              onClick={() => setSelected("job-seeker")}
+              className={cn("hover:scale-[1.02] active:scale-[0.98] transition duration-200 border-2  hover:border-primary ease-in  rounded-lg shadow-md p-3 flex cursor-pointer items-center justify-center gap-2",
+                selected === "job-seeker" ? "border-primary" : "border-transparent"
+              )}
+            >
+              <div className="bg-white p-3 rounded-lg">
+                <BriefcaseBusiness className="size-8" />
+              </div>
+              <div>
+                <h1 className="text-md font-bold tracking-normal">
+                  I'm a Job Seeker
+                </h1>
+                <p className="text-sm text-[#5a5a5a] font-medium">
+                  Find and apply for job opportunities that match your skills
+                  and career goals.
+                </p>
+              </div>
+            </div>
+
+            <div
+              onClick={() => setSelected("recruiter")}
+              className={cn("hover:scale-[1.02] active:scale-[0.98] transition duration-200 border-2  hover:border-primary ease-in  rounded-lg shadow-md p-3 flex cursor-pointer items-center justify-center gap-2",
+                selected === "recruiter" ? "border-primary" : "border-transparent"
+              )}
+            >
+              <div className="bg-white p-3 rounded-lg">
+                <Handshake className="size-8" />
+              </div>
+              <div>
+                <h1 className="text-md font-bold tracking-normal">
+                  I'm a Recruiter
+                </h1>
+                <p className="text-sm text-[#5a5a5a] font-medium">
+                  Post job listings and discover qualified candidates to fill
+                  your open positions.
+                </p>
+              </div>
+            </div>
+          </div>
+          <Button onClick={() => {router.push(`/onboarding/${selected}`)}} className="w-full mt-4 active:scale-[0.99] hover:scale-[1.01] transition duration-300 ease-in">
+            Continue <ArrowRight className="size-4 ml-2" />{" "}
+          </Button>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
