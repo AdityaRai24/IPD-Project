@@ -6,14 +6,14 @@ function Interview({params}){
 
   useEffect(()=>{
     console.log(params.interviewId)
-    getInterwiewDetails();
+    // getInterwiewDetails();
   },[])
 
-  const getInterwiewDetails=async()=>{
-    const result = await db.select().from(Question)
-    .where(eq(Question.mockId,params.interviewId))
-    console.log(result);
-  }
+  // const getInterwiewDetails=async()=>{
+  //   const result = await db.select().from(Question)
+  //   .where(eq(Question.mockId,params.interviewId))
+  //   console.log(result);
+  // }
   return (
     <div>
       Interview

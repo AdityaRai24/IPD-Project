@@ -53,9 +53,10 @@ const AddNewInterView = () => {
   
 
   const onSubmit = async (e) => {
+   
     setLoading(true);
     e.preventDefault();
-    console.log(jobDescription, jobPosition, experience);
+    console.log(jobPosition,jobDescription,  experience);
 
     const inputPrompt =
       "Job position:" +
@@ -76,10 +77,12 @@ const AddNewInterView = () => {
       .replace("```", "");
     console.log(JSON.parse(mockJsonResponse));
     setJsonResponse(mockJsonResponse);
-
-    if (mockJsonResponse) {
+   
+    
+    
+     
         const insertQuestion = async () => {
-        const router = useRouter();
+          const router = useRouter();
         const resp = await prisma.question.create({
           data: {
             mockId: uuidv4(),
@@ -94,14 +97,13 @@ const AddNewInterView = () => {
         prisma.$disconnect();
       });
       
-      setLoading(false);
+      
       if (resp) {
         setOpenDialog(false);
         router.push("/dashboard/interview" + resp.mockId);
       }};
-    } else {
-      console.log("error");
-    }
+    
+    setLoading(false);
   };
   return (
     <div>
