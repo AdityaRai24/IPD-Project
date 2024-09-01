@@ -5,13 +5,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export const login = async (provider) => {
-  await signIn(provider, { callbackUrl: "/" });
-  revalidatePath("/authenticate");
+  await signIn(provider, { redirectTo: "/" });
+  revalidatePath("/");
 };
 
 export const logout = async () => {
   await signOut({ callbackUrl: "/" });
-  redirect("/authenticate")
+  revalidatePath("/")
+  redirect("/")
 };
 
 export const loginWithCredentials = async (formData) => {
@@ -22,8 +23,8 @@ export const loginWithCredentials = async (formData) => {
   };
 
   try {
-    await signIn("credentials", { ...rawFormData, callbackUrl: "/" });
-    revalidatePath("/authenticate");
+    await signIn("credentials", { ...rawFormData, redirectTo : "/" });
+    revalidatePath("/");
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -44,9 +45,12 @@ export const registerWithCredentials = async (formData) => {
     isRegistering: "true",
   };
 
+  const cpassword = formData.get("cpassword")
+
+
   try {
-    await signIn("credentials", { ...rawFormData, callbackUrl: "/" });
-    revalidatePath("/authenticate");
+    await signIn("credentials", { ...rawFormData, redirectTo: "/accountType" });
+    revalidatePath("/");
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

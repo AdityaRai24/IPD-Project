@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,18 +18,52 @@ import { login, registerWithCredentials } from "@/actions/auth";
 import RegisterButton from "../buttons/RegisterButton";
 import { redirect, useRouter } from "next/navigation";
 
+const registerSchema = z.object({
+  emailId: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters long" }),
+  cpassword: z.string()
+}).refine((data) => data.password === data.cpassword, {
+  message: "Passwords don't match",
+  path: ["cpassword"],
+});
+
 const RegisterForm = () => {
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const router = useRouter();
 
+  const validateForm = (formData) => {
+    try {
+      registerSchema.parse({
+        emailId: formData.get("emailId"),
+        password: formData.get("password"),
+        cpassword: formData.get("cpassword")
+      });
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors = {};
+        error.errors.forEach((err) => {
+          newErrors[err.path[0]] = err.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSubmit = async (formData) => {
-    setError(""); // Clear previous errors
+    setErrors({});
+    
+    if (!validateForm(formData)) {
+      return;
+    }
+
     const result = await registerWithCredentials(formData);
     if (result?.error) {
-      setError(result.error);
+      setErrors({ form: result.error });
     } else {
-      console.log("registereation success")
-      redirect("/")
+      console.log("Registration success");
+      redirect("/accountType");
     }
   };
 
@@ -37,7 +72,7 @@ const RegisterForm = () => {
       <Card>
         <CardHeader>
           <CardTitle>Register</CardTitle>
-          <CardDescription className="">
+          <CardDescription>
             Enter your credentials to create an account.
           </CardDescription>
         </CardHeader>
@@ -51,6 +86,7 @@ const RegisterForm = () => {
                 placeholder="johndoe@gmail.com"
                 required
               />
+              {errors.emailId && <div className="text-red-500 text-sm">{errors.emailId}</div>}
             </div>
             <div className="space-y-1">
               <Label htmlFor="password">Password</Label>
@@ -61,8 +97,20 @@ const RegisterForm = () => {
                 placeholder="********"
                 required
               />
+              {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
+            <div className="space-y-1">
+              <Label htmlFor="cpassword">Confirm Password</Label>
+              <Input
+                id="cpassword"
+                type="password"
+                name="cpassword"
+                placeholder="********"
+                required
+              />
+              {errors.cpassword && <div className="text-red-500 text-sm">{errors.cpassword}</div>}
+            </div>
+            {errors.form && <div className="text-red-500 text-sm">{errors.form}</div>}
           </CardContent>
           <CardFooter className="flex flex-col">
             <RegisterButton />

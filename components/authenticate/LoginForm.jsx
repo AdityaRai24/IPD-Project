@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,17 +18,46 @@ import LoginButton from "../buttons/LoginButton";
 import { loginWithCredentials, login } from "@/actions/auth";
 import { useRouter } from 'next/navigation';
 
+const loginSchema = z.object({
+  emailId: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
+});
+
 const LoginForm = () => {
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const router = useRouter();
 
+  const validateForm = (formData) => {
+    try {
+      loginSchema.parse({
+        emailId: formData.get("emailId"),
+        password: formData.get("password"),
+      });
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors = {};
+        error.errors.forEach((err) => {
+          newErrors[err.path[0]] = err.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSubmit = async (formData) => {
-    setError(""); // Clear previous errors
+    setErrors({}); 
+    
+    if (!validateForm(formData)) {
+      return;
+    }
+
     const result = await loginWithCredentials(formData);
     if (result?.error) {
-      setError(result.error);
+      setErrors({ form: result.error });
     } else {
-      router.refresh(); // Refresh the page to update the session
+      router.refresh(); 
     }
   };
 
@@ -46,12 +76,14 @@ const LoginForm = () => {
             <div className="space-y-1">
               <Label htmlFor="email">Email Id</Label>
               <Input id="email" name="emailId" placeholder="johndoe@gmail.com" required />
+              {errors.emailId && <div className="text-red-500 text-sm">{errors.emailId}</div>}
             </div>
             <div className="space-y-1">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" name="password" placeholder="********" required />
+              {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {errors.form && <div className="text-red-500 text-sm">{errors.form}</div>}
           </CardContent>
           <CardFooter className="flex flex-col">
             <LoginButton />

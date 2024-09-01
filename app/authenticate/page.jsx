@@ -3,6 +3,7 @@ import LoginForm from "@/components/authenticate/LoginForm";
 import RegisterForm from "@/components/authenticate/RegisterForm";
 
 export default function page() {
+
   return (
     <div className="flex items-center justify-center w-full h-[80vh]">
       <Tabs defaultValue="login" className="w-[400px] ">
