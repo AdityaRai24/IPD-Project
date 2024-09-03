@@ -23,6 +23,14 @@ const JobRequirements = ({ form, skilloptions, selectedOptions, handleChange }) 
             className="basic-multi-select"
             classNamePrefix="select"
             placeholder="Select skills required for the job"
+            menuPortalTarget={document.body} // Renders the dropdown at the end of the document
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }), // Ensures the dropdown appears above other elements
+              control: (base) => ({
+                ...base,
+                zIndex: 1, // Keeps the select input above the text area
+              }),
+            }}
           />
           <FormMessage />
         </FormItem>

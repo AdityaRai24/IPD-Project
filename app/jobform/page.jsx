@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,6 +8,7 @@ import { z } from "zod";
 import JobDetails from "@/components/jobformcomponents/JobDetails";
 import LocationDetails from "@/components/jobformcomponents/LocationDetails";
 import JobRequirements from "@/components/jobformcomponents/JobRequirements";
+import ContactInformation from "@/components/jobformcomponents/ContactInformation";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +20,6 @@ import {
   indianStates,
   skilloptions,
 } from "@/components/dataset/jobformdata.js";
-import ContactInformation from "@/components/jobformcomponents/ContactInformation";
 
 const JobFormpage = () => {
   const [selectedOptions, setSelectedOptions] = useState([]);
@@ -46,24 +46,62 @@ const JobFormpage = () => {
   };
 
   return (
-    <div className="w-full max-w-full mx-auto py-8 px-4 sm:px-8 lg:px-12 shadow-lg rounded-lg">
-      <h1 className="text-4xl font-bold text-center mb-8">Post a Job</h1>
+    <div className="w-full max-w-5xl mx-auto py-12 px-8 sm:px-12 lg:px-16 bg-white shadow-2xl rounded-2xl">
+      <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">
+        Post a Job
+      </h1>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit((data) => console.log(data))} className="space-y-8">
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">Contact Information</h2>
+        <form
+          onSubmit={form.handleSubmit((data) => console.log(data))}
+          className="space-y-12"
+        >
+          <section className="bg-gray-50 p-8 rounded-lg shadow-md">
+            <h2 className="text-3xl font-semibold text-gray-800 mb-6">
+              Contact Information
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Provide the contact details for this job listing. This information will be used to reach out to you regarding the job post.
+            </p>
             <ContactInformation form={form} />
           </section>
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">Job Details</h2>
-            <JobDetails form={form} jobtypes={jobtypes} jobIndustry={jobIndustry} jobSalary={jobSalary} workexp={workexp} />
+
+          <section className="bg-gray-50 p-8 rounded-lg shadow-md">
+            <h2 className="text-3xl font-semibold text-gray-800 mb-6">
+              Job Details
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Fill in the specifics about the job role. This includes job type, industry, and expected salary.
+            </p>
+            <JobDetails
+              form={form}
+              jobtypes={jobtypes}
+              jobIndustry={jobIndustry}
+              jobSalary={jobSalary}
+              workexp={workexp}
+            />
           </section>
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">Location Details</h2>
-            <LocationDetails form={form} indianStates={indianStates} indianCities={indianCities} />
+
+          <section className="bg-gray-50 p-8 rounded-lg shadow-md">
+            <h2 className="text-3xl font-semibold text-gray-800 mb-6">
+              Location Details
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Specify where the job is located, including the state and city.
+            </p>
+            <LocationDetails
+              form={form}
+              indianStates={indianStates}
+              indianCities={indianCities}
+            />
           </section>
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">Job Requirements</h2>
+
+          <section className="bg-gray-50 p-8 rounded-lg shadow-md">
+            <h2 className="text-3xl font-semibold text-gray-800 mb-6">
+              Job Requirements
+            </h2>
+            <p className="text-gray-600 mb-6">
+              List the skills and experience required for this job. This will help applicants understand if they're a good fit.
+            </p>
             <JobRequirements
               form={form}
               skilloptions={skilloptions}
@@ -71,11 +109,13 @@ const JobFormpage = () => {
               handleChange={handleChange}
             />
           </section>
-          <div className="text-center">
+
+          <div className="flex justify-center">
             <Button
               type="submit"
-              className="mt-6 px-6 py-3 w-96 hover:opacity-50 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-primary-dark">
-              Submit
+              className="mt-10 px-10 py-4 bg-primary text-white text-lg font-bold rounded-full shadow-lg hover:bg-primary-dark transition-all duration-300 transform hover:scale-105"
+            >
+              Submit Job
             </Button>
           </div>
         </form>
