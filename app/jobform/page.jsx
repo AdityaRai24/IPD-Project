@@ -47,8 +47,9 @@ const JobFormpage = () => {
 
   return (
     <div className="w-full max-w-5xl mx-auto py-12 px-8 sm:px-12 lg:px-16 bg-white shadow-2xl rounded-2xl">
-      <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">
+      <h1 className="text-4xl font-extrabold text-center text-rose-500 mb-12">
         Post a Job
+        <img src="/underline.svg" className="w-[350px] top-[150px] right-[540px] absolute"/>
       </h1>
       <Form {...form}>
         <form

@@ -1,7 +1,8 @@
+"use client"
 import React, { useState } from 'react';
-import JobCard from './components/JobCard';
+import JobCard from '@/components/JobCard/JobCard';
 
-function App() {
+const JobCardPage = () => {
   const jobs = [
     {
       title: 'Frontend Developer',
@@ -77,6 +78,6 @@ function App() {
       </div>
     </div>
   );
-}
+};
 
-export default App;
+export default JobCardPage;
