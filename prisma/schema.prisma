@@ -28,7 +28,7 @@ model User {
   accounts      Account[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
-  role          UserRole?   @default(JOB_SEEKER) 
+  role          UserRole?  @default(JOB_SEEKER)
   jobSeeker     JobSeeker?
   recruiter     Recruiter?
 }
@@ -55,12 +55,15 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
-model Question {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  jsonMockResp String
-  mockId       String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Interview {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  jsonMockResp   Json
+  mockId         String
+  jobPosition    String
+  jobDescription String
+  exp            Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model JobSeeker {

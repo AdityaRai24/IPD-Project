@@ -11,8 +11,11 @@ export default function Home() {
           <div className="flex items-center w-[65%] ">
             <div>
               <h1 className="text-7xl font-semibold text-center text-[#0B1215] tracking-normal leading-[1.15]">
-                Hiring made<span className="text-primary/90"> intelligent</span> {" "}
-                <img src="/underline.svg" className="w-[350px] top-[295px] right-96 absolute"/>
+                Hiring made<span className="text-primary/90"> intelligent</span>{" "}
+                <img
+                  src="/underline.svg"
+                  className="w-[350px] top-[295px] right-96 absolute"
+                />
                 for modern businesses.
               </h1>
               <p className="max-w-[70%] text-[#0B1215] text-lg mt-4 block mx-auto text-center">

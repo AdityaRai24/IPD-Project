@@ -1,31 +1,30 @@
-import {  NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import prisma from '@/lib/db'; 
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import prisma from "@/lib/db";
 
 export const GET = auth((req) => {
   const { auth } = req;
-  
+
   if (auth?.user) {
     console.log(auth.user);
     return NextResponse.json(auth.user);
   }
-  
+
   return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
 });
 
-export const POST = auth(async (req) =>  {
-
+export const POST = auth(async (req) => {
   const { auth } = req;
-  
+
   if (!auth?.user) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const formData = await req.json()
+    const formData = await req.json();
     const userDetails = auth.user;
     if (!userDetails) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const userId = auth.user.id;
@@ -63,13 +62,19 @@ export const POST = auth(async (req) =>  {
       },
     });
 
-    console.log(jobSeeker)
+    console.log(jobSeeker);
 
-    return NextResponse.json({ message: 'Form submitted successfully', jobSeeker });
+    return NextResponse.json({
+      message: "Form submitted successfully",
+      jobSeeker,
+    });
   } catch (error) {
-    console.log(error,"error from server")
-    return NextResponse.json({ message: 'Error submitting form', error: error.message }, { status: 500 });
+    console.log(error, "error from server");
+    return NextResponse.json(
+      { message: "Error submitting form", error: error.message },
+      { status: 500 }
+    );
   } finally {
     await prisma.$disconnect();
   }
-})
+});
