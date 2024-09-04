@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { poppins } from "@/utils/fonts";
-import Navbar from "@/components/navbar/Navbar";
+
 
 export default function Home() {
   return (
