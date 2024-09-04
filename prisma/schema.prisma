@@ -61,7 +61,7 @@ model Interview {
   mockId         String
   jobPosition    String
   jobDescription String
-  exp            Int
+  exp            String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -87,9 +87,9 @@ model JobSeeker {
 }
 
 model Recruiter {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId         String   @unique @db.ObjectId
-  user           User     @relation(fields: [userId], references: [id])
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String    @unique @db.ObjectId
+  user           User      @relation(fields: [userId], references: [id])
   companyName    String?
   jobTitle       String?
   phoneNumber    String?
@@ -97,6 +97,28 @@ model Recruiter {
   companyWebsite String?
   industry       String?
   companyLogo    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Posts          Jobpost[]
+}
+
+model Jobpost {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  recruiter     Recruiter @relation(fields: [recruiterId], references: [id])
+  recruiterId   String    @db.ObjectId
+  contactname   String
+  contactnumber String
+  contactemail  String    @unique
+  title         String
+  type          String
+  industry      String
+  salary        String
+  workexp       String
+  state         String
+  city          String
+  skills        String[]
+  description   String
+  slug          String    @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }

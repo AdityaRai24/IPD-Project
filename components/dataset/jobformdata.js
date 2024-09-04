@@ -222,6 +222,7 @@ export const indianCities = [
 ];
 
 export const skilloptions = [
+  // Programming Languages
   { value: "agile", label: "Agile" },
   { value: "ai-ml", label: "AI/ML" },
   { value: "angular", label: "Angular" },
@@ -273,4 +274,86 @@ export const skilloptions = [
   { value: "typescript", label: "TypeScript" },
   { value: "vue-js", label: "Vue.js" },
   { value: "web-development", label: "Web Development" },
+  
+  // Additional Programming Languages and Frameworks
+  { value: "bash-scripting", label: "Bash Scripting" },
+  { value: "c", label: "C" },
+  { value: "clojure", label: "Clojure" },
+  { value: "dart", label: "Dart" },
+  { value: "elixir", label: "Elixir" },
+  { value: "erlang", label: "Erlang" },
+  { value: "fortran", label: "Fortran" },
+  { value: "go", label: "Go" },
+  { value: "haskell", label: "Haskell" },
+  { value: "julia", label: "Julia" },
+  { value: "lua", label: "Lua" },
+  { value: "matlab", label: "MATLAB" },
+  { value: "objective-c", label: "Objective-C" },
+  { value: "perl", label: "Perl" },
+  { value: "prolog", label: "Prolog" },
+  { value: "rust", label: "Rust" },
+  { value: "sap-abap", label: "SAP ABAP" },
+  { value: "sas", label: "SAS" },
+  { value: "scala", label: "Scala" },
+  { value: "shell-scripting", label: "Shell Scripting" },
+  { value: "smalltalk", label: "Smalltalk" },
+  { value: "solidity", label: "Solidity" },
+  { value: "tcl", label: "Tcl" },
+  { value: "vb-net", label: "VB.NET" },
+  { value: "xamarin", label: "Xamarin" },
+  
+  // Databases and Data Tools
+  { value: "cassandra", label: "Cassandra" },
+  { value: "dynamodb", label: "DynamoDB" },
+  { value: "elasticsearch", label: "Elasticsearch" },
+  { value: "firebase", label: "Firebase" },
+  { value: "hbase", label: "HBase" },
+  { value: "influxdb", label: "InfluxDB" },
+  { value: "mariadb", label: "MariaDB" },
+  { value: "neo4j", label: "Neo4j" },
+  { value: "oracle-db", label: "Oracle DB" },
+  { value: "presto", label: "Presto" },
+  { value: "redis", label: "Redis" },
+  { value: "snowflake", label: "Snowflake" },
+  { value: "sqlite", label: "SQLite" },
+  
+  // DevOps and Cloud Technologies
+  { value: "ansible", label: "Ansible" },
+  { value: "cloudformation", label: "CloudFormation" },
+  { value: "gcp", label: "GCP" },
+  { value: "helm", label: "Helm" },
+  { value: "istio", label: "Istio" },
+  { value: "jenkins", label: "Jenkins" },
+  { value: "openstack", label: "OpenStack" },
+  { value: "puppet", label: "Puppet" },
+  { value: "terraform", label: "Terraform" },
+  { value: "vagrant", label: "Vagrant" },
+  { value: "vault", label: "Vault" },
+  
+  // Cybersecurity
+  { value: "penetration-testing", label: "Penetration Testing" },
+  { value: "ethical-hacking", label: "Ethical Hacking" },
+  { value: "network-security", label: "Network Security" },
+  { value: "siem", label: "SIEM" },
+  { value: "ssl-tls", label: "SSL/TLS" },
+  { value: "vulnerability-assessment", label: "Vulnerability Assessment" },
+  { value: "web-security", label: "Web Security" },
+  
+  // Project Management and Tools
+  { value: "asanas", label: "Asana" },
+  { value: "confluence", label: "Confluence" },
+  { value: "microsoft-project", label: "Microsoft Project" },
+  { value: "monday", label: "Monday.com" },
+  { value: "trello", label: "Trello" },
+  { value: "zoho-projects", label: "Zoho Projects" },
+  
+  // Miscellaneous Skills
+  { value: "automation", label: "Automation" },
+  { value: "business-analyst", label: "Business Analyst" },
+  { value: "digital-marketing", label: "Digital Marketing" },
+  { value: "networking", label: "Networking" },
+  { value: "product-management", label: "Product Management" },
+  { value: "technical-writing", label: "Technical Writing" },
+  { value: "ui-ux-design", label: "UI/UX Design" },
+  { value: "video-editing", label: "Video Editing" },
 ];

@@ -6,7 +6,7 @@ export async function GET(req,res){
         const url = new URL(req.url)
         const sessionId = url.searchParams.get("sessionId")
         console.log(sessionId)
-        const result = await prisma.question.findUnique({
+        const result = await prisma.interview.findUnique({
             where:{
                 id : sessionId
             }
