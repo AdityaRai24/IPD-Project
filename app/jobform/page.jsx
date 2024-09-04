@@ -20,9 +20,14 @@ import {
   indianStates,
   skilloptions,
 } from "@/components/dataset/jobformdata.js";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+
 
 const JobFormpage = () => {
   const [selectedOptions, setSelectedOptions] = useState([]);
+      const router = useRouter();
+
   const form = useForm({
     resolver: zodResolver(
       z.object({
@@ -43,6 +48,26 @@ const JobFormpage = () => {
       })
     ),
   });
+
+  const onSubmit = async (data) => {
+    const isValid = await form.trigger();
+
+    if (isValid) {
+            try {
+        data.requiredskills = selectedOptions.map((skill) => skill.value);
+        const response = await axios.post(
+          "http://localhost:3000/api/submit-job-post",
+          data
+        );
+        if (!response.data) {
+          throw new Error("Failed to submit form");
+        }
+        router.push("/");
+      } catch (error) {
+        console.error("Error submitting form:", error);
+      } 
+    }
+  };
 
   const handleChange = (selectedOption) => {
     setSelectedOptions(selectedOption);
@@ -123,6 +148,7 @@ const JobFormpage = () => {
           <div className="flex justify-center">
             <Button
               type="submit"
+              onClick={onSubmit}
               className="mt-10 px-10 py-4 bg-primary text-white text-lg font-bold rounded-full shadow-lg hover:bg-primary-dark transition-all duration-300 transform hover:scale-105"
             >
               Submit Job
