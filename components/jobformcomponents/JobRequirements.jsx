@@ -14,7 +14,8 @@ const JobRequirements = ({
   form,
   skilloptions,
   selectedOptions,
-  handleChange,
+  handleoptionChange,
+  handleEditorSave
 }) => (
   <div>
     <FormField
@@ -27,7 +28,7 @@ const JobRequirements = ({
             isMulti
             value={selectedOptions}
             onChange={(selectedOption) => {
-              handleChange(selectedOption);
+              handleoptionChange(selectedOption);
               field.onChange(selectedOption);
             }}
             options={skilloptions}
@@ -39,19 +40,19 @@ const JobRequirements = ({
         </FormItem>
       )}
     />
-    <FormField
+    {/* <FormField
       control={form.control}
       name="jobDescription"
       render={({ field }) => (
         <FormItem>
           <FormLabel>Job Description</FormLabel>
           <FormControl>
-            <RichTextEditor value={field.value} onChange={field.onChange} />
+            <RichTextEditor value={field.value} onEditorSave={handleEditorSave} />
           </FormControl>
           <FormMessage />
         </FormItem>
       )}
-    />
+    /> */}
   </div>
 );
 

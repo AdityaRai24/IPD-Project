@@ -67,15 +67,15 @@ model JobSeeker {
   id                 String   @id @default(auto()) @map("_id") @db.ObjectId
   userId             String   @unique @db.ObjectId
   user               User     @relation(fields: [userId], references: [id])
-  phoneNumber        String?
-  dateOfBirth        String?
-  location           String?
-  collegeName        String?
-  currentJobTitle    String?
-  currentCompany     String?
-  desiredJobTitle    String?
-  desiredSalaryRange String?
-  employmentType     String?
+  phoneNumber        String
+  dateOfBirth        String
+  location           String
+  collegeName        String
+  currentJobTitle    String
+  currentCompany     String
+  desiredJobTitle    String
+  desiredSalaryRange String
+  employmentType     String
   skills             String[]
   linkedinUrl        String?
   resumeUrl          String?
@@ -87,13 +87,13 @@ model Recruiter {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
   userId         String    @unique @db.ObjectId
   user           User      @relation(fields: [userId], references: [id])
-  companyName    String?
-  phoneNumber    String?
-  linkedinUrl    String?
-  companyWebsite String?
-  industry       String?
-  fullName       String?
-  companyLogo    String?
+  companyName    String
+  jobTitle       String
+  phoneNumber    String
+  linkedinUrl    String
+  companyWebsite String
+  industry       String
+  companyLogo    String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   Posts          Jobpost[]
@@ -115,7 +115,7 @@ model Jobpost {
   city          String
   skills        String[]
   description   String
-  slug          String    @unique
+  // slug          String    @unique
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
