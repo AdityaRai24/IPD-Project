@@ -28,7 +28,8 @@ const Navbar = () => {
         )}
       >
         <div className="flex items-center gap-2">
-          <Link href="/">
+          <Link href="/" className="flex items-center justify-center gap-2">
+            <img src="./logo.png" alt="" className="w-[35px]" />
             <h1 className="text-2xl font-bold">
               Emplo<span className="text-primary">Ease</span>
             </h1>
@@ -48,7 +49,11 @@ const Navbar = () => {
         <div>
           {isLoading ? (
             <>
-              <div>loading...</div>
+              <img
+               className="w-[45px] rounded-full border-primary border"
+                src="https://w7.pngwing.com/pngs/177/551/png-transparent-user-interface-design-computer-icons-default-stephen-salazar-graphy-user-interface-design-computer-wallpaper-sphere-thumbnail.png"
+                alt=""
+              />
             </>
           ) : (
             <>

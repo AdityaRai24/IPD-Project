@@ -63,7 +63,7 @@ const RegisterForm = () => {
       setErrors({ form: result.error });
     } else {
       console.log("Registration success");
-      redirect("/accountType");
+      window.location.href = "/accountType";
     }
   };
 
@@ -116,7 +116,7 @@ const RegisterForm = () => {
             <RegisterButton />
             <div className="text-center py-2 text-gray-500 text-sm">OR</div>
             <Button
-              onClick={() => login("google")}
+              onClick={() => login("google",true)}
               className="w-full gap-2"
               variant="outline"
             >

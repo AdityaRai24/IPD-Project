@@ -6,7 +6,6 @@ export const GET = auth((req) => {
   const { auth } = req;
 
   if (auth?.user) {
-    console.log(auth.user);
     return NextResponse.json(auth.user);
   }
 
@@ -29,44 +28,38 @@ export const POST = auth(async (req) => {
 
     const userId = auth.user.id;
 
-    const jobSeeker = await prisma.jobSeeker.upsert({
+    console.log(formData)
+
+    const recruiter = await prisma.recruiter.upsert({
       where: { userId: userId },
       update: {
+        companyName: formData.companyName,
+        linkedinUrl: formData.linkedinUrl,
+        companyWebsite: formData.companyWebsite,
+        industry: formData.companyIndustry,
+        companyLogo: formData.companyLogo ? formData.companyLogo : null,
+        fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
-        dateOfBirth: new Date(formData.dob).toISOString(),
-        location: formData.location,
-        collegeName: formData.collegeName,
-        currentJobTitle: formData.currentJobTitle,
-        currentCompany: formData.currentCompany,
-        desiredJobTitle: formData.desiredJobTitle,
-        desiredSalaryRange: formData.desiredSalaryRange,
-        employmentType: formData.employmentType,
-        skills: formData.skills,
-        linkedinUrl: formData.linkedInUrl,
-        resumeUrl: formData.resume ? formData.resume : null,
       },
       create: {
-        userId: userId,
+        companyName: formData.companyName,
+        linkedinUrl: formData.linkedinUrl,
+        companyWebsite: formData.companyWebsite,
+        industry: formData.companyIndustry,
+        companyLogo: formData.companyLogo ? formData.companyLogo : null,
+        fullName: formData.fullName,
         phoneNumber: formData.phoneNumber,
-        dateOfBirth: new Date(formData.dob).toISOString(),
-        location: formData.location,
-        collegeName: formData.collegeName,
-        currentJobTitle: formData.currentJobTitle,
-        currentCompany: formData.currentCompany,
-        desiredJobTitle: formData.desiredJobTitle,
-        desiredSalaryRange: formData.desiredSalaryRange,
-        employmentType: formData.employmentType,
-        skills: formData.skills,
-        linkedinUrl: formData.linkedInUrl,
-        resumeUrl: formData.resume ? formData.resume : null,
+        user: {
+          connect: { id: userId },
+        },
       },
     });
 
-    console.log(jobSeeker);
+    console.log(recruiter);
 
     return NextResponse.json({
       message: "Form submitted successfully",
-      jobSeeker,
+      recruiter,
     });
   } catch (error) {
     console.log(error, "error from server");

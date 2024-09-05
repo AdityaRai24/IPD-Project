@@ -28,7 +28,7 @@ model User {
   accounts      Account[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
-  role          UserRole?   @default(JOB_SEEKER) 
+  role          UserRole?  @default(JOB_SEEKER)
   jobSeeker     JobSeeker?
   recruiter     Recruiter?
 }
@@ -88,11 +88,11 @@ model Recruiter {
   userId         String   @unique @db.ObjectId
   user           User     @relation(fields: [userId], references: [id])
   companyName    String?
-  jobTitle       String?
   phoneNumber    String?
   linkedinUrl    String?
   companyWebsite String?
   industry       String?
+  fullName       String?
   companyLogo    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

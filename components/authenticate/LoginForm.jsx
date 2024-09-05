@@ -88,7 +88,7 @@ const LoginForm = () => {
           <CardFooter className="flex flex-col">
             <LoginButton />
             <div className="text-center py-2 text-gray-500 text-sm">OR</div>
-            <Button type="button" onClick={() => login("google")} className="w-full gap-2" variant="outline">
+            <Button type="button" onClick={() => login("google",false)} className="w-full gap-2" variant="outline">
               <Image src={"/google.png"} width={25} height={25} alt="google" />
               <span> Login With Google</span>
             </Button>
