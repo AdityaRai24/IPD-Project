@@ -1,55 +1,67 @@
-  // components/JobDetails.js
+// components/JobDetails.js
 
-  import {
-    FormField,
-    FormItem,
-    FormLabel,
-    FormControl,
-    FormMessage,
-  } from "@/components/ui/form";
-  import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-  } from "@/components/ui/popover";
-  import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-  } from "@/components/ui/command";
-  import { Button } from "@/components/ui/button";
-  import { ChevronsUpDown, Check } from "lucide-react";
-  import { cn } from "@/lib/utils";
-  import { Input } from "@/components/ui/input";
-  const JobDetails = ({ form, jobTitle ,jobtypes, jobIndustry, jobSalary, workexp }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-         <FormField
-      control={form.control}
-      name="jobTitle"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className="text-lg font-medium text-gray-700">Job Title</FormLabel>
-          <FormControl>
-            <Input
-              placeholder="Enter Job Title"
-              {...field}
-              className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md bg-white text-gray-900"
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-      
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+const JobDetails = ({
+  form,
+  jobTitle,
+  jobtypes,
+  jobIndustry,
+  jobSalary,
+  workexp,
+}) => (
+  <div className="flex flex-col gap-6">
+    <div className="flex items-center justify-between gap-6">
+      <FormField
+        control={form.control}
+        name="jobTitle"
+        render={({ field }) => (
+          <FormItem className="w-[65%]">
+            <FormLabel className="text-md font-medium text-gray-700">
+              Job Title
+            </FormLabel>
+            <FormControl>
+              <Input
+                placeholder="Enter Job Title"
+                {...field}
+                className="border-gray-300  rounded-md bg-white text-gray-900"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <FormField
         control={form.control}
         name="jobType"
         render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel>Job Type</FormLabel>
+          <FormItem className="flex flex-col flex-1">
+            <FormLabel className="text-md font-medium text-gray-700">
+              Job Type
+            </FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -57,7 +69,7 @@
                     variant="outline"
                     role="combobox"
                     className={cn(
-                      "w-full md:w-[200px] justify-between bg-white",
+                      "w-full justify-between bg-white",
                       !field.value && "text-muted-foreground"
                     )}
                   >
@@ -68,7 +80,7 @@
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
+              <PopoverContent className=" p-0">
                 <Command>
                   <CommandInput placeholder="Job Types" />
                   <CommandList>
@@ -102,12 +114,16 @@
           </FormItem>
         )}
       />
+    </div>
+    <div className="flex items-center  justify-between gap-6">
       <FormField
         control={form.control}
         name="industry"
         render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel>Job Industry</FormLabel>
+          <FormItem className="flex flex-col w-1/3">
+            <FormLabel className="text-md font-medium text-gray-700">
+              Job Industry
+            </FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -115,7 +131,7 @@
                     variant="outline"
                     role="combobox"
                     className={cn(
-                      "w-full md:w-[200px] justify-between bg-white",
+                      " justify-between bg-white",
                       !field.value && "text-muted-foreground"
                     )}
                   >
@@ -127,7 +143,7 @@
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
+              <PopoverContent className="w-full p-0">
                 <Command>
                   <CommandInput placeholder="Job Industries" />
                   <CommandList>
@@ -164,9 +180,12 @@
       <FormField
         control={form.control}
         name="salary"
+        className=""
         render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel>Salary</FormLabel>
+          <FormItem className="flex flex-col w-1/3">
+            <FormLabel className="text-md font-medium text-gray-700">
+              Salary
+            </FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -174,18 +193,19 @@
                     variant="outline"
                     role="combobox"
                     className={cn(
-                      "w-full md:w-[200px] justify-between bg-white",
+                      "w-full justify-between bg-white",
                       !field.value && "text-muted-foreground"
                     )}
                   >
                     {field.value
-                      ? jobSalary.find((sal) => sal.value === field.value)?.label
+                      ? jobSalary.find((sal) => sal.value === field.value)
+                          ?.label
                       : "Job Salary"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
+              <PopoverContent className="w-full p-0">
                 <Command>
                   <CommandInput placeholder="Salary" />
                   <CommandList>
@@ -222,9 +242,12 @@
       <FormField
         control={form.control}
         name="workexp"
+        className=""
         render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel>Work Experience</FormLabel>
+          <FormItem className="flex flex-col w-1/3">
+            <FormLabel className="text-md font-medium text-gray-700">
+              Work Experience
+            </FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -232,7 +255,7 @@
                     variant="outline"
                     role="combobox"
                     className={cn(
-                      "w-full md:w-[200px] justify-between bg-white",
+                      "w-full justify-between bg-white",
                       !field.value && "text-muted-foreground"
                     )}
                   >
@@ -243,7 +266,7 @@
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
+              <PopoverContent className="w-full p-0">
                 <Command>
                   <CommandInput placeholder="Experience" />
                   <CommandList>
@@ -278,6 +301,7 @@
         )}
       />
     </div>
-  );
+  </div>
+);
 
-  export default JobDetails;
+export default JobDetails;

@@ -1,5 +1,3 @@
-// components/JobRequirements.js
-
 import {
   FormField,
   FormItem,
@@ -15,9 +13,8 @@ const JobRequirements = ({
   skilloptions,
   selectedOptions,
   handleoptionChange,
-  handleEditorSave
 }) => (
-  <div>
+  <div className="flex flex-col gap-6">
     <FormField
       control={form.control}
       name="requiredskills"
@@ -40,19 +37,25 @@ const JobRequirements = ({
         </FormItem>
       )}
     />
-    {/* <FormField
+    <FormField
       control={form.control}
       name="jobDescription"
       render={({ field }) => (
         <FormItem>
           <FormLabel>Job Description</FormLabel>
           <FormControl>
-            <RichTextEditor value={field.value} onEditorSave={handleEditorSave} />
+            <RichTextEditor
+              content={field.value}
+              onEditorSave={(html) => {
+                field.onChange(html);
+                form.setValue("jobDescription", html);
+              }}
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
       )}
-    /> */}
+    />
   </div>
 );
 

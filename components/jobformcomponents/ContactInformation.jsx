@@ -15,14 +15,14 @@ const ContactInformation = ({ form }) => (
             <Input
               placeholder="Enter Your Full Name"
               {...field}
-              className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md bg-white"
+              className="border-gray-300 rounded-md bg-white"
             />
           </FormControl>
           <FormMessage />
         </FormItem>
       )}
     />
-    <FormField
+    {/* <FormField
       control={form.control}
       name="contactPhone"
       render={({ field }) => (
@@ -33,13 +33,13 @@ const ContactInformation = ({ form }) => (
               placeholder="Enter Your Mobile Number"
               type="tel"
               {...field}
-              className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md bg-white"
+              className="border-gray-300 rounded-md bg-white"
             />
           </FormControl>
           <FormMessage />
         </FormItem>
       )}
-    />
+    /> */}
     <FormField
       control={form.control}
       name="contactEmail"
@@ -51,7 +51,7 @@ const ContactInformation = ({ form }) => (
               placeholder="Enter Your Email Address"
               type="email"
               {...field}
-              className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md bg-white"
+              className="border-gray-300 rounded-md bg-white"
             />
           </FormControl>
           <FormMessage />

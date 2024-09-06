@@ -6,13 +6,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Image from "next/image";
 
 const User = () => {
   const { data: session } = useSession();
 
+
   const imageUrl = session?.user?.image
     ? session?.user?.image
     : "https://github.com/shadcn.png";
+
 
   const handleLogout = async() => {
     try {
@@ -27,7 +30,7 @@ const User = () => {
     <div className="flex items-center justify-center gap-2">
       <Popover>
         <PopoverTrigger>
-          <img src={imageUrl} className="w-[45px] rounded-full" />
+          <Image width={45} height={45} alt="image" src={imageUrl} className="rounded-full" />
         </PopoverTrigger>
         <PopoverContent className="">
           <div>
