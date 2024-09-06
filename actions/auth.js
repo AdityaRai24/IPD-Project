@@ -4,8 +4,8 @@ import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-export const login = async (provider) => {
-  await signIn(provider, { redirectTo: "/" });
+export const login = async (provider,isRegister) => {
+  await signIn(provider, { redirectTo: isRegister ? "/accountType" : "/" });
   revalidatePath("/");
 };
 
@@ -44,9 +44,6 @@ export const registerWithCredentials = async (formData) => {
     password: formData.get("password"),
     isRegistering: "true",
   };
-
-  const cpassword = formData.get("cpassword")
-
 
   try {
     await signIn("credentials", { ...rawFormData, redirectTo: "/accountType" });

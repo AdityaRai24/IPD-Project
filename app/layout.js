@@ -2,6 +2,7 @@ import { poppins } from "@/utils/fonts";
 import "./globals.css";
 import Navbar from "@/components/navbar/Navbar";
 import AuthProvider from "@/providers/AuthProvider";
+import { Toaster } from "react-hot-toast";
 
 export const metadata = {
   title: "Create Next App",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }) {
       <AuthProvider>
         <body className={poppins.className}>
           <Navbar />
+          <Toaster />
           {children}
         </body>
       </AuthProvider>

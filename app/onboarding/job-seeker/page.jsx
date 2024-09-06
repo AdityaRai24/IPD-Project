@@ -34,6 +34,8 @@ import MultiSelect from "react-select";
 import { skilloptions } from "@/components/dataset/jobformdata";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 const step1Schema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -72,12 +74,7 @@ const step3Schema = z.object({
     .array(z.object({ value: z.string(), label: z.string() }))
     .min(1, "Please select at least one skill"),
   linkedInUrl: z.string().url("Please enter a valid LinkedIn URL"),
-  resumeUrl: z
-    .instanceof(File, { message: "Please upload a resume file" })
-    .refine(
-      (file) => file.size <= 5000000,
-      "File size should be less than 5MB"
-    ),
+  resumeUrl: z.string().url("Please upload a resume file"), // Changed to string for Cloudinary URL
 });
 
 const formSchema = z.object({
@@ -87,10 +84,16 @@ const formSchema = z.object({
 });
 
 const JobSeekerPage = () => {
+  const { data: session, status } = useSession();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
+
+  if (!session && status !== "loading") {
+    router.push("/authenticate");
+  }
+  ``;
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -114,7 +117,7 @@ const JobSeekerPage = () => {
 
   const onSubmit = async (data) => {
     const isValid = await form.trigger();
-
+    console.log(data)
     if (isValid) {
       setIsSubmitting(true);
       try {
@@ -126,8 +129,10 @@ const JobSeekerPage = () => {
         if (!response.data) {
           throw new Error("Failed to submit form");
         }
+        toast.success("Onboarding Successful");
         router.push("/");
       } catch (error) {
+        toast.error("Error submitting form");
         console.error("Error submitting form:", error);
       } finally {
         setIsSubmitting(false);
@@ -188,7 +193,7 @@ const JobSeekerPage = () => {
   };
 
   return (
-    <main className="flex min-h-screen text-[#0B1215] flex-col items-center justify-center p-6 bg-secondary">
+    <main className="flex min-h-screen text-[#0B1215] flex-col items-center justify-center p-6 bg-white">
       <h1 className="text-center text-3xl font-bold tracking-normal">
         Job Seeker <span className="text-primary">Onboarding</span>
         <img
@@ -201,7 +206,7 @@ const JobSeekerPage = () => {
         These personal details can be always updated later.
       </p>
 
-      <div className="w-full max-w-2xl bg-white mt-6 p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-2xl bg-white mt-6 p-8 rounded-lg shadow-sm shadow-primary">
         <ProgressBar step={step} />
         {renderStepHeading()}
         <Form {...form}>
@@ -250,7 +255,7 @@ const NavigationButtons = ({ step, onPrev, onNext, isSubmitting }) => (
       <Button
         onClick={onPrev}
         type="button"
-        className="btn-primary w-[30%] text-white font-semibold py-2 px-4 rounded-md flex items-center justify-center"
+        className="btn-primary w-[30%] active:scale-[0.98] hover:scale-[1.02] transition duration-300 ease text-white font-semibold py-2 px-4 rounded-md flex items-center justify-center"
         disabled={isSubmitting}
       >
         <ChevronLeft className="h-4 w-4 mr-2" />
@@ -261,7 +266,7 @@ const NavigationButtons = ({ step, onPrev, onNext, isSubmitting }) => (
       <Button
         type="submit"
         className={cn(
-          "btn-primary w-[30%] text-white font-semibold py-2 px-4 rounded-md flex items-center justify-center",
+          "btn-primary w-[30%] active:scale-[0.98] hover:scale-[1.02] transition duration-300 ease text-white font-semibold py-2 px-4 rounded-md flex items-center justify-center",
           step === 1 ? "w-[100%]" : ""
         )}
         disabled={isSubmitting}
@@ -274,7 +279,7 @@ const NavigationButtons = ({ step, onPrev, onNext, isSubmitting }) => (
         onClick={onNext}
         type="button"
         className={cn(
-          "btn-primary w-[30%] text-white font-semibold py-2 px-4 rounded-md flex items-center justify-center",
+          "btn-primary w-[30%] text-white active:scale-[0.98] hover:scale-[1.02] transition duration-300 ease font-semibold py-2 px-4 rounded-md flex items-center justify-center",
           step === 1 ? "w-[100%]" : ""
         )}
         disabled={isSubmitting}
@@ -507,63 +512,101 @@ const Step2 = ({ form }) => (
   </div>
 );
 
-const Step3 = ({ form }) => (
-  <div className="flex flex-col gap-4">
-    <FormField
-      control={form.control}
-      name="skills"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Select your Skills</FormLabel>
-          <MultiSelect
-            isMulti
-            value={field.value}
-            onChange={field.onChange}
-            options={skilloptions}
-            className="basic-multi-select"
-            classNamePrefix="select"
-            placeholder="Your Skillset"
-          />
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-    <FormField
-      control={form.control}
-      name="linkedInUrl"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>LinkedIn Profile URL</FormLabel>
-          <FormControl>
-            <Input
-              placeholder="https://www.linkedin.com/in/yourprofile"
-              {...field}
-              className="border-gray-300 rounded-md"
+const Step3 = ({ form }) => {
+  const [uploadingResume, setUploadingResume] = useState(false);
+
+  const handleResumeUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadingResume(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "Ipd-Project");
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/dhgkbncpv/upload`,
+        formData
+      );
+      form.setValue("resumeUrl", response.data.secure_url);
+      form.clearErrors("resumeUrl"); 
+      toast.success("Resume uploaded successfully");
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+      toast.error("Error uploading resume");
+      form.setError("resumeUrl", {
+        type: "manual",
+        message: "Failed to upload resume. Please try again.",
+      });
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <FormField
+        control={form.control}
+        name="skills"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Select your Skills</FormLabel>
+            <MultiSelect
+              isMulti
+              value={field.value}
+              onChange={field.onChange}
+              options={skilloptions}
+              className="basic-multi-select"
+              classNamePrefix="select"
+              placeholder="Your Skillset"
             />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="linkedInUrl"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>LinkedIn Profile URL</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="https://www.linkedin.com/in/yourprofile"
+                {...field}
+                className="border-gray-300 rounded-md"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     <FormField
-      control={form.control}
-      name="resumeUrl"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Upload Your Resume</FormLabel>
-          <FormControl>
-            <Input
-              id="resumeUrl"
-              type="file"
-              accept=".pdf,.doc,.docx"
-              onChange={(e) => field.onChange(e.target.files[0])}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  </div>
-);
+        control={form.control}
+        name="resumeUrl"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Upload Your Resume</FormLabel>
+            <FormControl>
+              <Input
+                id="resumeUrl"
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => {
+                  handleResumeUpload(e);
+                  field.onChange(e);
+                }}
+                disabled={uploadingResume}
+              />
+            </FormControl>
+           
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+};
 
 export default JobSeekerPage;

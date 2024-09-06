@@ -1,8 +1,15 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/authenticate/LoginForm";
 import RegisterForm from "@/components/authenticate/RegisterForm";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function page() {
+export default async function page() {
+
+  const session = await auth()
+  if(session){
+    redirect("/")
+  }
 
   return (
     <div className="flex items-center justify-center w-full h-[80vh]">

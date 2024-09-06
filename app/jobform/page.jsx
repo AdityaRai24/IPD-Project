@@ -26,7 +26,8 @@ import { useRouter } from "next/navigation";
 
 const JobFormpage = () => {
   const [selectedOptions, setSelectedOptions] = useState([]);
-      const router = useRouter();
+  const [htmlcontent,sethtmlcontent] = useState('');
+  const router = useRouter();
 
   const form = useForm({
     resolver: zodResolver(
@@ -50,28 +51,34 @@ const JobFormpage = () => {
   });
 
   const onSubmit = async (data) => {
-    const isValid = await form.trigger();
+    console.log(data)
+    // const isValid = await form.trigger();
 
-    if (isValid) {
-            try {
-        data.requiredskills = selectedOptions.map((skill) => skill.value);
-        const response = await axios.post(
-          "http://localhost:3000/api/submit-job-post",
-          data
-        );
-        if (!response.data) {
-          throw new Error("Failed to submit form");
-        }
-        router.push("/");
-      } catch (error) {
-        console.error("Error submitting form:", error);
-      } 
-    }
-  };
+    // if (isValid) {
+    //         try {
+    //     data.requiredskills = selectedOptions.map((skill) => skill.value);
+    //     const response = await axios.post(
+    //       "http://localhost:3000/api/submit-job-post",
+    //       data
+    //     )
+    //     console.log("done");
+    //     if (!response.data) {
+    //       throw new Error("Failed to submit form");
+    //     }
+    //     router.push("/");
+    //   } catch (error) {
+    //     console.error("Error submitting form:", error);
+    //   } 
+    // }
+   };
 
-  const handleChange = (selectedOption) => {
+  const handleoptionChange = (selectedOption) => {
     setSelectedOptions(selectedOption);
   };
+
+const handleEditorSave =(html)=>{
+  sethtmlcontent(html)
+}
 
   return (
     <div className="w-full max-w-5xl mx-auto py-12 px-8 sm:px-12 lg:px-16 bg-white shadow-2xl rounded-2xl">
@@ -84,7 +91,7 @@ const JobFormpage = () => {
       </h1>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((data) => console.log(data))}
+          onSubmit={onSubmit}
           className="space-y-12"
         >
           <section className="bg-gray-50 p-8 rounded-lg shadow-md">
@@ -141,7 +148,8 @@ const JobFormpage = () => {
               form={form}
               skilloptions={skilloptions}
               selectedOptions={selectedOptions}
-              handleChange={handleChange}
+              handleoptionChange={handleoptionChange}
+              handleEditorSave={handleEditorSave}
             />
           </section>
 

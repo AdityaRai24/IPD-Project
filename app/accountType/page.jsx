@@ -26,8 +26,8 @@ const page = () => {
           <div className="flex flex-col items-center justify-center gap-4">
             <div
               onClick={() => setSelected("job-seeker")}
-              className={cn("hover:scale-[1.02] active:scale-[0.98] transition duration-200 border-2  hover:border-primary ease-in  rounded-lg shadow-md p-3 flex cursor-pointer items-center justify-center gap-2",
-                selected === "job-seeker" ? "border-primary" : "border-transparent"
+              className={cn("hover:scale-[1.02] transition duration-200 border-2  hover:border-primary ease-in  rounded-lg shadow-md p-3 flex cursor-pointer items-center justify-center gap-2",
+                selected === "job-seeker" ? "border-primary scale-[1.02]" : "border-transparent"
               )}
             >
               <div className="bg-white p-3 rounded-lg">
@@ -46,8 +46,8 @@ const page = () => {
 
             <div
               onClick={() => setSelected("recruiter")}
-              className={cn("hover:scale-[1.02] active:scale-[0.98] transition duration-200 border-2  hover:border-primary ease-in  rounded-lg shadow-md p-3 flex cursor-pointer items-center justify-center gap-2",
-                selected === "recruiter" ? "border-primary" : "border-transparent"
+              className={cn("hover:scale-[1.02] transition duration-200 border-2  hover:border-primary ease-in  rounded-lg shadow-md p-3 flex cursor-pointer items-center justify-center gap-2",
+                selected === "recruiter" ? "border-primary scale-[1.02]" : "border-transparent"
               )}
             >
               <div className="bg-white p-3 rounded-lg">
