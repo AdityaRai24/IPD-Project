@@ -9,16 +9,18 @@ const StartInterview = ({ params }) => {
   const [interviewData, setInterviewData] = useState();
   const [mockInterviewQuestion, setMockInterviewQuestion] = useState([]);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(2);
+  const sessionId = params.interviewId;
   
   const getInterviewDetails = async () => {
     try {
-      const sessionId = params.interviewId;
+      
       const response = await axios.get(
         `http://localhost:3000/api/getInterview?sessionId=${sessionId}`
       );
       // console.log(response.data);
       setInterviewData(response.data);
       const jsonMockResponce = response.data.jsonMockResp;
+      // console.log(jsonMockResponce);
       setMockInterviewQuestion(jsonMockResponce);
       // console.log(jsonMockResponce);
       // console.log(response.data.jsonMockResp);
@@ -41,7 +43,11 @@ const StartInterview = ({ params }) => {
 
         {/* { Video Audio Recording} */}
 
-        <RecordAnswer/>
+        <RecordAnswer
+          sessionId={sessionId}
+          mockInterviewQuestion={mockInterviewQuestion}
+          activeQuestionIndex={activeQuestionIndex}
+        />
       </div>
     </div>
   );

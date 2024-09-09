@@ -11,7 +11,7 @@ export async function GET(req,res){
                 id : sessionId
             }
         })
-        console.log(result)
+        // console.log(result)
 
         return NextResponse.json(result)
     } catch (error) {
