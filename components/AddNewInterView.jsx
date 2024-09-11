@@ -67,7 +67,7 @@ const AddNewInterView = () => {
         "http://localhost:3000/api/generateInterview",
         { jobPosition, jobDescription, experience, demoOutput }
       );
-      console.log(response.data.jsonMockResp);
+      // console.log(response.data.jsonMockResp);
     } catch (error) {
       console.log(error);
     } finally {

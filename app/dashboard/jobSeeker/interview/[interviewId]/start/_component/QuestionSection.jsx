@@ -1,3 +1,4 @@
+"use client"
 import { Lightbulb, Volume2 } from "lucide-react";
 import React from "react";
 
@@ -19,6 +20,7 @@ const QuestionSection = ({ mockInterviewQuestion, activeQuestionIndex }) => {
         {mockInterviewQuestion &&
           mockInterviewQuestion.map((question, index) => (
             <h2
+              key={index}
               className={`p-2 rounded-full text-xs md:text-sm text-center cursor-pointer ${
                 activeQuestionIndex === index
                   ? " bg-primary text-white"
