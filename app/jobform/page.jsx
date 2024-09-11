@@ -15,79 +15,92 @@ import {
   jobtypes,
   jobIndustry,
   workexp,
-  indianCities,
   jobSalary,
-  indianStates,
   skilloptions,
 } from "@/components/dataset/jobformdata.js";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
-  contactName: z.string().nonempty(),
-  contactPhone: z.string().nonempty(),
-  contactEmail: z.string().nonempty().email(),
-  jobTitle: z.string().nonempty(),
-  jobType: z.string().nonempty(),
-  industry: z.string().nonempty(),
-  salary: z.string().nonempty(),
-  experience: z.string().nonempty(),
-  State: z.string().nonempty(),
-  City: z.string().nonempty(),
-  requiredskills: z.array(z.object({ label: z.string(), value: z.string() })),
+  contactName: z.string().min(1),
+  contactEmail: z.string().min(1).email(),
+  jobTitle: z.string().min(1),
+  jobType: z.string().min(1),
+  industry: z.string().min(1),
+  salary: z.number().min(1),
+  experience: z.number().min(1),
+  isRemote: z.boolean(),
+  state: z.string().optional(),
+  city: z.string().optional(),
+  requiredSkills: z
+    .array(z.object({ label: z.string(), value: z.string() }))
+    .min(1, "Select at least 1 skill"),
   jobDescription: z.string(),
+}).refine((data) => {
+  if (!data.isRemote) {
+    return data.state && data.city;
+  }
+  return true;
+}, {
+  message: "Either select Remote Work or provide both State and City",
+  path: ["isRemote", "state", "city"],
 });
+
 
 const JobFormpage = () => {
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [htmlcontent, sethtmlcontent] = useState("");
+  const [submitting, setSubmitting] = useState(false)
   const router = useRouter();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       contactName: "",
-      contactPhone: "",
       contactEmail: "",
       jobTitle: "",
-      jobType: jobtypes[0].value,
-      industry: jobIndustry[0].value,
-      salary: jobSalary[0].value,
-      experience: workexp[0].value,
-      State: indianStates[0].value,
-      City: indianCities[0].value,
-      requiredskills: [],
+      jobType: "",
+      industry: "",
+      salary: "",
+      experience: "",
+      state: "",
+      city: "",
+      requiredSkills: [],
       jobDescription: "",
     },
   });
 
   const onSubmit = async (data) => {
-    console.log(htmlcontent);
-    console.log("Form submitted with data:", data);
+    const isValid = await form.trigger();
 
-    // const isValid = await form.trigger();
-
-    // if (isValid) {
-    //         try {
-    //     data.requiredskills = selectedOptions.map((skill) => skill.value);
-    //     const response = await axios.post(
-    //       "http://localhost:3000/api/submit-job-post",
-    //       data
-    //     )
-    //     console.log("done");
-    //     if (!response.data) {
-    //       throw new Error("Failed to submit form");
-    //     }
-    //     router.push("/");
-    //   } catch (error) {
-    //     console.error("Error submitting form:", error);
-    //   }
-    // }
+    if (isValid) {
+      try {
+        setSubmitting(true)
+        data.requiredSkills = selectedOptions.map((skill) => skill.value);
+        const response = await axios.post(
+          "http://localhost:3000/api/submit-job-post",
+          data
+        );
+        setSubmitting(false)
+        toast.success("Job Posted Successfully");
+        if (!response.data) {
+          setSubmitting(false)
+          toast.error("Failed to submit form");
+          throw new Error("Failed to submit form");
+        }
+        router.push("/");
+      } catch (error) {
+        setSubmitting(false)
+        console.error("Error submitting form:", error);
+      }
+    }
   };
 
   const handleoptionChange = (selectedOption) => {
     setSelectedOptions(selectedOption);
-    form.setValue("requiredskills", selectedOption);
+    form.setValue("requiredSkills", selectedOption);
   };
 
   const handleEditorSave = (html) => {
@@ -145,8 +158,6 @@ const JobFormpage = () => {
               </p>
               <LocationDetails
                 form={form}
-                indianStates={indianStates}
-                indianCities={indianCities}
               />
             </section>
 
@@ -167,11 +178,9 @@ const JobFormpage = () => {
               />
             </section>
 
-
             <div className="pb-12">
-              <Button className="w-1/3 text-md py-6">Post Job</Button>
+              <Button className="w-1/3 text-md py-6" disabled={submitting}>{submitting ? "Submitting..." : "Submit"} {submitting && <Loader2 className="w-5 h-5 animate-spin"/>}</Button>
             </div>
-
           </form>
         </Form>
       </div>

@@ -27,40 +27,25 @@ export const POST = auth(async (req) => {
     }
 
     const recruiterId = auth.user.id;
+    
 
-    const Jobpost = await prisma.Jobpost.upsert({
-      where: { recruiterId: recruiterId },
-      update: {
-        contactname: formData.contactName,
-        contactnumber: formData.contactPhone,
-        contactemail: formData.contactEmail,
-        title: formData.jobTitle,
-        type: formData.jobType,
-        industry: formData.industry,
-        salary: formData.salary,
-        workexp: formData.experience,
-        state: formData.State,
-        city: formData.City,
-        skills: formData.requiredskills,
-        description: formData.jobDescription,
-      },
-      create: {
+    const Jobpost = await prisma.jobPost.create({
+      data: {
         recruiterId: recruiterId,
         contactname: formData.contactName,
-        contactnumber: formData.contactPhone,
         contactemail: formData.contactEmail,
         title: formData.jobTitle,
         type: formData.jobType,
         industry: formData.industry,
         salary: formData.salary,
         workexp: formData.experience,
-        state: formData.State,
-        city: formData.City,
-        skills: formData.requiredskills,
+        isRemote: formData.isRemote,
+        state: formData.state,
+        city: formData.city,
+        skills: formData.requiredSkills,
         description: formData.jobDescription,
       },
     });
-    console.log(Jobpost);
 
     return NextResponse.json({
       message: "Form submitted successfully",

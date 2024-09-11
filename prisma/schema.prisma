@@ -99,26 +99,26 @@ model Recruiter {
   companyLogo    String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  Posts          Jobpost[]
+  Posts          JobPost[]
 }
 
-model Jobpost {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  recruiter     Recruiter @relation(fields: [recruiterId], references: [id])
-  recruiterId   String    @db.ObjectId
-  contactname   String
-  contactnumber String
-  contactemail  String    @unique
-  title         String
-  type          String
-  industry      String
-  salary        String
-  workexp       String
-  state         String
-  city          String
-  skills        String[]
-  description   String
+model JobPost {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  recruiter    Recruiter @relation(fields: [recruiterId], references: [id])
+  recruiterId  String    @db.ObjectId
+  contactname  String
+  contactemail String    
+  title        String
+  type         String
+  industry     String
+  salary       Int
+  workexp      Int
+  isRemote     Boolean
+  state        String?
+  city         String?
+  skills       String[]
+  description  String
   // slug          String    @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

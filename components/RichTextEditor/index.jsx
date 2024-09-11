@@ -22,19 +22,50 @@ import {
   Heading3,
   Sparkle,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import axios from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import toast from "react-hot-toast";
+import { Textarea } from "../ui/textarea";
+import { Label } from "../ui/label";
 
-export default function RichTextEditor({ content, onEditorSave }) {
+export default function RichTextEditor({ form, content, onEditorSave }) {
   const [isMounted, setIsMounted] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [additionalDetails, setAdditionalDetails] = useState("");
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [generatedDescription, setGeneratedDescription] = useState("");
 
-  const generateJobDescription = async() => {
+  const formValues = form.getValues();
+  const generateJobDescription = async () => {
+    const isValid = await form.trigger();
+
+    if (!isValid) {
+      toast.error("Please fill all the required fields");
+      return;
+    }
     try {
-      const response = await axios.post(`http://localhost:3000/api/generate-job-description`, { content: content })
-      console.log(response.data)
+      setGeneratingDescription(true);
+      const response = await axios.post(
+        `http://localhost:3000/api/generate-job-description`,
+        { formDetails: formValues, additionalDetails: additionalDetails }
+      );
+      form.setValue("jobDescription", response.data);
+      setIsOpen(false);
+      toast.success("Job description generated!");
     } catch (error) {
-      console.log(error)
+      console.log(error);
+    } finally {
+      setGeneratingDescription(false);
     }
   };
 
@@ -67,7 +98,7 @@ export default function RichTextEditor({ content, onEditorSave }) {
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[200px] border border-gray-300 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary px-4 py-2",
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[200px] border border-gray-300 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary p-8",
       },
     },
     onUpdate: ({ editor }) => {
@@ -76,9 +107,18 @@ export default function RichTextEditor({ content, onEditorSave }) {
     },
   });
 
+  useEffect(() => {
+    if (editor && form.getValues().jobDescription !== editor.getHTML()) {
+      console.log("Editor content changed:", editor.getHTML());
+      editor.commands.setContent(form.getValues().jobDescription);
+    }
+  }, [form.getValues().jobDescription, editor]);
+
   if (!isMounted || !editor) {
     return null;
   }
+
+  
 
   return (
     <div className="rich-text-editor">
@@ -228,14 +268,42 @@ export default function RichTextEditor({ content, onEditorSave }) {
             <AlignRight className="w-5 h-5" />
           </button>
         </div>
-
         <Button
+          onClick={() => setIsOpen(true)}
           type="button"
-          onClick={generateJobDescription}
           className="flex items-center gap-2"
         >
           Generate With AI <Sparkles className="w-4 h-4" />{" "}
         </Button>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Generate Job Description</DialogTitle>
+              <DialogDescription>
+                <div className="my-3 flex flex-col gap-3">
+                  <Label className="text-black">Additional Details</Label>
+                  <Textarea
+                    value={additionalDetails}
+                    onChange={(e) => setAdditionalDetails(e.target.value)}
+                    className=" text-black"
+                    placeholder={
+                      "Enter additional details (if any) that you want to include in your job description"
+                    }
+                  />
+                  <Button
+                    onClick={generateJobDescription}
+                    disabled={generatingDescription}
+                  >
+                    {generatingDescription ? "Generating..." : "Generate"}{" "}
+                    {generatingDescription && (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    )}
+                  </Button>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="border-t-0 rounded-b-lg shadow-sm">
         <EditorContent editor={editor} />

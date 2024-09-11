@@ -17,7 +17,7 @@ const JobRequirements = ({
   <div className="flex flex-col gap-6">
     <FormField
       control={form.control}
-      name="requiredskills"
+      name="requiredSkills"
       render={({ field }) => (
         <FormItem>
           <FormLabel>Skills Required</FormLabel>
@@ -45,6 +45,7 @@ const JobRequirements = ({
           <FormLabel>Job Description</FormLabel>
           <FormControl>
             <RichTextEditor
+            form={form}
               content={field.value}
               onEditorSave={(html) => {
                 field.onChange(html);
