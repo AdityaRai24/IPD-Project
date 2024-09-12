@@ -96,7 +96,7 @@ const RecruiterPage = () => {
         console.log(response.data);
         router.push("/");
       } catch (error) {
-        toast.success("Error submitting form");
+        toast.error("Error submitting form");
         console.error("Error submitting form:", error);
       } finally {
         setIsSubmitting(false);

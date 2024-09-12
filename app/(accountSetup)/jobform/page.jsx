@@ -83,6 +83,7 @@ const JobFormpage = () => {
           "http://localhost:3000/api/submit-job-post",
           data
         );
+        console.log(response)
         setSubmitting(false)
         toast.success("Job Posted Successfully");
         if (!response.data) {
@@ -114,7 +115,7 @@ const JobFormpage = () => {
         Post a <span className="text-primary">Job</span>
         <img
           src="/dual-underline.svg"
-          className="w-[100px] top-34 right-[660px] absolute"
+          className="w-[100px] top-34 right-[760px] absolute"
         />
       </h1>
       <div className="max-w-5xl mx-auto">

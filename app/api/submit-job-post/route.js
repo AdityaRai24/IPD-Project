@@ -47,6 +47,8 @@ export const POST = auth(async (req) => {
       },
     });
 
+    console.log(Jobpost);
+
     return NextResponse.json({
       message: "Form submitted successfully",
       Jobpost,

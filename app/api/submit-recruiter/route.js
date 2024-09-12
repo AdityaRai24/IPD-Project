@@ -28,8 +28,6 @@ export const POST = auth(async (req) => {
 
     const userId = auth.user.id;
 
-    console.log(formData)
-
     const recruiter = await prisma.recruiter.upsert({
       where: { userId: userId },
       update: {
@@ -54,8 +52,6 @@ export const POST = auth(async (req) => {
         },
       },
     });
-
-    console.log(recruiter);
 
     return NextResponse.json({
       message: "Form submitted successfully",
