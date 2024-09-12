@@ -1,54 +1,65 @@
 "use client";
-import React, { useState } from "react";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import QuestionSection from "./_component/QuestionSection";
 import RecordAnswer from "./_component/RecordAnswer";
+import { Loader2 } from "lucide-react";
 
 const StartInterview = ({ params }) => {
-  const [interviewData, setInterviewData] = useState();
-  const [mockInterviewQuestion, setMockInterviewQuestion] = useState([]);
-  const [activeQuestionIndex, setActiveQuestionIndex] = useState(2);
+  const [interviewData, setInterviewData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const sessionId = params.interviewId;
-  
+
   const getInterviewDetails = async () => {
     try {
-      
+      setIsLoading(true);
       const response = await axios.get(
         `http://localhost:3000/api/getInterview?sessionId=${sessionId}`
       );
-      // console.log(response.data);
       setInterviewData(response.data);
-      const jsonMockResponce = response.data.jsonMockResp;
-      // console.log(jsonMockResponce);
-      setMockInterviewQuestion(jsonMockResponce);
-      // console.log(jsonMockResponce);
-      // console.log(response.data.jsonMockResp);
+      setIsLoading(false);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching interview data:", error);
+      setError("Failed to load interview data. Please try again.");
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     getInterviewDetails();
-  }, []);
-  return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* questions */}
-        <QuestionSection
-          mockInterviewQuestion={mockInterviewQuestion}
-          activeQuestionIndex={activeQuestionIndex}
-        />
+  }, [sessionId]);
 
-        {/* { Video Audio Recording} */}
-
-        <RecordAnswer
-          sessionId={sessionId}
-          mockInterviewQuestion={mockInterviewQuestion}
-          activeQuestionIndex={activeQuestionIndex}
-        />
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[85vh]">
+        <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+        <p>Loading interview data...</p>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[85vh]">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (!interviewData) {
+    return (
+      <div className="flex items-center justify-center h-[85vh]">
+        <p>No interview data available.</p>
+      </div>
+    );
+  }
+
+
+  return (
+    <div className="flex items-center justify-center gap-8 h-[85vh]">
+      <QuestionSection interviewData={interviewData} />
+      <RecordAnswer sessionId={sessionId} interviewData={interviewData} />
     </div>
   );
 };

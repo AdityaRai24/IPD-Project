@@ -5,19 +5,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ChatSession } from "@google/generative-ai";
-import { chatSession } from "@/utils/GenminiAiModel";
 import { LoaderCircle } from "lucide-react";
-import moment from "moment/moment";
-import { useRouter } from "next/router";
-import prisma from "@/lib/db";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const AddNewInterView = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -59,6 +54,8 @@ const AddNewInterView = () => {
     },
   ];
 
+  const router = useRouter();
+
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -67,7 +64,7 @@ const AddNewInterView = () => {
         "http://localhost:3000/api/generateInterview",
         { jobPosition, jobDescription, experience, demoOutput }
       );
-      // console.log(response.data.jsonMockResp);
+      router.push(`./jobSeeker/interview/${response.data.id}`);
     } catch (error) {
       console.log(error);
     } finally {
@@ -77,12 +74,12 @@ const AddNewInterView = () => {
 
   return (
     <div>
-      <div
-        className="p-10 w-[250px] h-[150px]border rounded-lg bg-primary hover:scale-105 hover:shadow-md cursor-pointer transition-all"
+      <Button
+        className="!py-6 !px-6 text-md border rounded-lg bg-primary transition duration-300 ease hover:scale-[1.03] hover:shadow-md cursor-pointer"
         onClick={() => setOpenDialog(true)}
       >
-        <h2 className=" text-lg text-center text-white">+ Add New</h2>
-      </div>
+        Mock Interview
+      </Button>
       <Dialog open={openDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -90,62 +87,68 @@ const AddNewInterView = () => {
               Tell us more about job interview
             </DialogTitle>
             <DialogDescription>
-              <form onSubmit={onSubmit}>
-                <div>
-                  <h2>
-                    Add details about your job position/role description and
-                    your years ofexperience
-                  </h2>
-                  <div className="mt-7 my-3">
-                    <label>Jobe Role/ Job Decription</label>
-                    <Input
-                      placeholder="eg App developer"
-                      required
-                      onChange={(event) => setJobPosition(event.target.value)}
-                    />
-                  </div>
-                  <div className="my-3">
-                    <label>Job Decription</label>
-
-                    <Textarea
-                      placeholder="eg React, Angular"
-                      required
-                      onChange={(event) =>
-                        setJobDescription(event.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="mt-7 my-3">
-                    <label>Experience</label>
-                    <Input
-                      type="number"
-                      required
-                      onChange={(event) => setExperience(event.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-5 justify-end mt-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setOpenDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <LoaderCircle className="animate-spin" />
-                        'Generating from Ai'
-                      </>
-                    ) : (
-                      "Start interview"
-                    )}
-                  </Button>
-                </div>
-              </form>
+              Add details about your job position/role description and your
+              years ofexperience
             </DialogDescription>
           </DialogHeader>
+          <form onSubmit={onSubmit}>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Job Role
+                </label>
+                <Input
+                  placeholder="eg App developer"
+                  required
+                  className="text-black mt-1"
+                  onChange={(event) => setJobPosition(event.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Job Decription
+                </label>
+
+                <Textarea
+                  placeholder="eg React, Angular"
+                  required
+                  className="text-black mt-1"
+                  onChange={(event) => setJobDescription(event.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Experience
+                </label>
+                <Input
+                  type="number"
+                  required
+                  placeholder="eg 2 years"
+                  className="text-black mt-1"
+                  onChange={(event) => setExperience(event.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex gap-5 justify-end mt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setOpenDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? (
+                  <>
+                    <LoaderCircle className="animate-spin w-4 h-4 mr-2" />
+                    Generating...
+                  </>
+                ) : (
+                  "Start interview"
+                )}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

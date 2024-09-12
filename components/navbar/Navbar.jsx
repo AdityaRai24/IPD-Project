@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const Navbar = () => {
   const { data: session, status } = useSession();
@@ -29,7 +30,7 @@ const Navbar = () => {
       >
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center justify-center gap-2">
-            <img src="./logo.png" alt="" className="w-[35px]" />
+          <Image src={'/logo.png'} width={25} height={25} alt="Logo"   />
             <h1 className="text-2xl font-bold">
               Emplo<span className="text-primary">Ease</span>
             </h1>
