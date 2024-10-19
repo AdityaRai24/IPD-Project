@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import UploadImage from "@/components/uploads/UploadImage";
 import { useState } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
@@ -236,7 +235,8 @@ const RecruiterPage = () => {
                       onChange={(e) => {
                         handleResumeUpload(e);
                         field.onChange(e);
-                      }}                      disabled={uploadingResume}
+                      }}
+                      disabled={uploadingResume}
                     />
                   </FormControl>
                   <FormMessage />

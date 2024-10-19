@@ -21,7 +21,7 @@ export default function Home() {
                 Hiring made<span className="text-primary/90"> intelligent</span>{" "}
                 <img
                   src="/underline.svg"
-                  className="w-[350px] top-[37%] right-96 absolute"
+                  className="w-[350px] top-[37%] right-[30%] absolute"
                 />
                 for modern businesses.
               </h1>
