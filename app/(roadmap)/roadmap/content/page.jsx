@@ -13,31 +13,40 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSearchParams } from "next/navigation";
+import axios from "axios";
 
 const LearningContentPage = () => {
   const [content, setContent] = useState([]);
   const [error, setError] = useState(null);
   const searchParams = useSearchParams();
   const topic = searchParams.get("topic");
+  const [generating, setGenerating] = useState(false);
+
+  const generateContent = async () => {
+    try {
+      setGenerating(true);
+      const response = await axios.post(
+        "http://localhost:3000/api/generate-description",
+        { description: topic },
+        { timeout: 30000 }
+      );
+
+      setContent(response.data);
+      localStorage.setItem(topic, JSON.stringify(response.data));
+      setGenerating(false);
+    } catch (error) {
+      setGenerating(false);
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    try {
-      const savedContent = localStorage.getItem(topic);
-      if (savedContent) {
-        const parsedContent = JSON.parse(savedContent);
-        if (Array.isArray(parsedContent)) {
-          setContent(parsedContent);
-        } else {
-          setError("Invalid content format: expected an array");
-        }
-      } else {
-        setError("No content found in local storage");
-      }
-    } catch (error) {
-      console.error("Error loading content:", error);
-      setError("Failed to load content");
+    if (!JSON.parse(localStorage.getItem(topic))) {
+      generateContent();
+    } else {
+      setContent(JSON.parse(localStorage.getItem(topic)));
     }
-  }, []);
+  }, [topic]);
 
   const getIconForSection = (type) => {
     switch (type) {
@@ -112,7 +121,7 @@ const LearningContentPage = () => {
 
       case "practiceExercise":
         return (
-          <div className="space-y-4 bg-gray-50 p-6 rounded-lg my-6">
+          <div className="space-y-4  p-6 rounded-lg my-6">
             <p className="text-gray-700 text-lg">{item.content}</p>
             {item.starterCode && (
               <div className="mt-4">
@@ -135,7 +144,7 @@ const LearningContentPage = () => {
                   href={resource.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center p-4  rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   {resource.type === "video" ? (
                     <Play className="w-5 h-5 mr-3 text-red-500" />
@@ -160,7 +169,7 @@ const LearningContentPage = () => {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto ">
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -177,9 +186,9 @@ const LearningContentPage = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <article className="prose prose-lg max-w-none">
-        <Card className="border-0 shadow-none">
+    <div className="w-full rounded-lg shadow-sm shadow-primary !bg-transparent mx-auto py-8 px-4">
+     {generating ? <div className="w-full min-h-screen flex items-center justify-center">Generating...</div> : <article className="w-full">
+        <Card className="border-0 !bg-transparent shadow-none">
           <CardHeader className="pb-8">
             <CardTitle className="text-4xl font-bold text-gray-900">
               {topic}
@@ -199,7 +208,7 @@ const LearningContentPage = () => {
             ))}
           </CardContent>
         </Card>
-      </article>
+      </article>}
     </div>
   );
 };

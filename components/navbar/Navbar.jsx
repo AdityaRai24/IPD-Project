@@ -21,10 +21,10 @@ const Navbar = () => {
   }, [status]);
 
   return (
-    <div className="">
+    <div className="border-b sticky">
       <div
         className={cn(
-          "flex max-w-[85%] mx-auto  justify-between items-center",
+          "flex max-w-[85%] mx-auto   justify-between items-center",
           pathname === "/" ? "p-8" : "p-3"
         )}
       >
