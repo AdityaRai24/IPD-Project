@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export const login = async (provider,isRegister) => {
-  await signIn(provider, { redirectTo: isRegister ? "/accountType" : "/" });
+  await signIn(provider, { redirectTo: isRegister ? "/roadmap" : "/" });
   revalidatePath("/");
 };
 
@@ -46,7 +46,7 @@ export const registerWithCredentials = async (formData) => {
   };
 
   try {
-    await signIn("credentials", { ...rawFormData, redirectTo: "/accountType" });
+    await signIn("credentials", { ...rawFormData, redirectTo: "/roadmap" });
     revalidatePath("/");
   } catch (error) {
     if (error instanceof AuthError) {
