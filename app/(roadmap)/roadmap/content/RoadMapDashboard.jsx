@@ -1,11 +1,28 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CheckCircle, Circle, BookOpen, Trophy } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
-import { PieChartComp } from "./PieChart";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  Loader2,
+  CheckCircle,
+  BookOpen,
+  Trophy,
+  ArrowRight,
+  PlusCircle,
+  Users,
+} from "lucide-react";
+import { useSession } from "next-auth/react";
+import AddNewInterView from "@/components/AddNewInterView";
 
 const RoadmapDashboard = () => {
   const router = useRouter();
@@ -18,6 +35,27 @@ const RoadmapDashboard = () => {
     completionPercentage: 0,
   });
 
+  const { data: session, status } = useSession();
+
+  const today = new Date();
+  const currentHour = today.getHours();
+  let greeting = "";
+
+  if (currentHour >= 5 && currentHour < 12) {
+    greeting = "Good morning";
+  } else if (currentHour >= 12 && currentHour < 17) {
+    greeting = "Good afternoon";
+  } else if (currentHour >= 17 && currentHour < 24) {
+    greeting = "Good evening";
+  }
+
+  const options = {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  };
+
+  const formattedDate = today.toLocaleDateString("en-US", options);
 
   useEffect(() => {
     loadRoadmap();
@@ -72,13 +110,6 @@ const RoadmapDashboard = () => {
     router.push(`/roadmap/generate`);
   };
 
-  const COLORS = ["#4CAF50", "#E0E0E0"];
-
-  const pieData = [
-    { name: "Completed", value: stats.completedLevels },
-    { name: "Remaining", value: stats.totalLevels - stats.completedLevels },
-  ];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -88,20 +119,67 @@ const RoadmapDashboard = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
       {error && (
         <Alert variant="destructive" className="mb-6">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+        <div className="p-4 bg-white rounded-lg shadow-sm">
+          <h2 className="text-md text-gray-500 font-medium">{formattedDate}</h2>
+          <h2 className="text-black text-2xl font-semibold mt-1">
+            {greeting}, {session?.user?.name}
+          </h2>
+          <p className="text-gray-600 mt-2">Ready to continue your journey?</p>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <PieChartComp stats={stats} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-yellow-500" />
+              Your Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-3xl font-bold">
+                  {stats.completionPercentage}%
+                </p>
+                <p className="text-gray-600">Overall Completion</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold">
+                  {stats.completedLevels}/{stats.totalLevels}
+                </p>
+                <p className="text-gray-600">Chapters Completed</p>
+              </div>
+            </div>
+            <Progress value={stats.completionPercentage} className="h-3" />
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/roadmap/generate")}
+            >
+              View Detailed Progress <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={()=>router.push(`/roadmap/create`)}
+            >
+              New Roadmap <PlusCircle className="w-4 h-4 ml-2" />
+            </Button>
+          </CardFooter>
+        </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-primary" />
+              <BookOpen className="w-6 h-6 text-primary" />
               Units Overview
             </CardTitle>
           </CardHeader>
@@ -121,27 +199,19 @@ const RoadmapDashboard = () => {
                     className="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
                     onClick={() => handleSectionClick(index)}
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          Unit {index + 1}: {section.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {sectionCompletedLevels} of {section.levels.length}{" "}
-                          chapters
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900">
-                          {sectionPercentage}%
-                        </span>
-                        {sectionPercentage === 100 ? (
-                          <CheckCircle className="w-5 h-5 text-green-500" />
-                        ) : (
-                          <Circle className="w-5 h-5 text-gray-400" />
-                        )}
-                      </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-medium text-gray-900">
+                        Unit {index + 1}: {section.name}
+                      </h3>
+                      <span className="text-sm font-medium text-gray-900">
+                        {sectionPercentage}%
+                      </span>
                     </div>
+                    <Progress value={sectionPercentage} className="h-2" />
+                    <p className="text-sm text-gray-600 mt-2">
+                      {sectionCompletedLevels} of {section.levels.length}{" "}
+                      chapters completed
+                    </p>
                   </div>
                 );
               })}
@@ -149,6 +219,25 @@ const RoadmapDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-6 h-6 text-blue-500" />
+            Mock Interviews
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600 mb-4">
+            Practice for interviews according to your preferred topics. Our
+            AI-powered mock interviews help you prepare for real-world scenarios
+            and improve your skills.
+          </p>
+          <div className="flex justify-between items-center">
+            <AddNewInterView />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

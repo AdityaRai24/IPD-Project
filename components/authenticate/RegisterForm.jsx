@@ -63,7 +63,7 @@ const RegisterForm = () => {
       setErrors({ form: result.error });
     } else {
       console.log("Registration success");
-      window.location.href = "/accountType";
+      window.location.href = "/roadmap";
     }
   };
 

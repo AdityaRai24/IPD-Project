@@ -1,47 +1,93 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, SearchIcon } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, BookOpen, Users, FileCheck } from "lucide-react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  const inputRef = useRef(null);
+  const { data: session } = useSession();
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  if (session) {
+    redirect("/roadmap");
+  }
+ 
 
   return (
-    <>
-      <div className=" h-full">
-        <div className="flex items-center justify-center w-full h-[70vh]">
-          <div className="flex items-center w-[65%] ">
-            <div>
-              <h1 className="text-7xl font-semibold text-center text-[#0B1215] tracking-normal leading-[1.15]">
-                Hiring made<span className="text-primary/90"> intelligent</span>{" "}
-                <img
-                  src="/underline.svg"
-                  className="w-[350px] top-[37%] right-[30%] absolute"
-                />
-                for modern businesses.
-              </h1>
-              <p className="max-w-[70%] text-[#0B1215] text-lg mt-4 block mx-auto text-center">
-                Most recruitment processes are time-consuming and inefficient.
-                We use AI to streamline hiring, helping you find the best talent
-                efficiently
-              </p>
-              <div className="mt-8 flex relative items-center gap-2 max-w-[70%] mx-auto shadow-xl justify-center">
-                <Input
-                  ref={inputRef}
-                  placeholder="Search for your dream job..."
-                  className="py-8"
-                />
-                <Button className="py-6 flex items-center justify-center gap-2 absolute right-0 m-2">Search <SearchIcon /> </Button>
-              </div>
+    <div className="min-h-screen bg-pink-50 px-4 py-12 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl">
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+            Ace Your <span className="text-red-500">Placements</span> with
+            Confidence
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-base text-gray-500 sm:text-lg md:mt-5 md:max-w-3xl md:text-xl">
+            Prepare smarter, interview better, and land your dream job with our
+            comprehensive placement preparation platform.
+          </p>
+          <div className="mx-auto mt-5 max-w-md sm:flex sm:justify-center md:mt-8">
+            <Button className="bg-red-500 text-white hover:bg-red-600">
+              <Link href="/authenticate">Start Preparing Now</Link>
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-16">
+          <div className="grid gap-8 md:grid-cols-3">
+            <FeatureCard
+              icon={<BookOpen className="h-6 w-6 text-red-500" />}
+              title="Personalized Roadmaps"
+              description="Get tailored study plans based on your target companies and roles."
+            />
+            <FeatureCard
+              icon={<Users className="h-6 w-6 text-red-500" />}
+              title="Mock Interviews"
+              description="Practice with AI-powered mock interviews simulating real company scenarios."
+            />
+            <FeatureCard
+              icon={<FileCheck className="h-6 w-6 text-red-500" />}
+              title="Skill Assessments"
+              description="Evaluate your progress with comprehensive skill assessments and quizzes."
+            />
+          </div>
+        </div>
+
+        <div className="mt-20 bg-white rounded-lg shadow-xl overflow-hidden">
+          <div className="px-6 py-12 sm:px-12">
+            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Ready to boost your placement chances?
+            </h2>
+            <p className="mt-4 text-lg text-gray-500">
+              Join thousands of students who have successfully landed their
+              dream jobs using our platform.
+            </p>
+            <div className="mt-8">
+              <Button className="bg-red-500 text-white hover:bg-red-600">
+                <Link href="/authenticate">Sign Up for Free</Link>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
-      </div>
-    </>
+      </main>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, description }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center text-xl font-semibold text-gray-900">
+          {icon}
+          <span className="ml-3">{title}</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-500">{description}</p>
+      </CardContent>
+    </Card>
   );
 }

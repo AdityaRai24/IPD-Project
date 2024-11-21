@@ -45,7 +45,7 @@ const Navbar = () => {
             <Link href="/contact" className="font-normal">
               Contact us
             </Link>
-            <Link href="/dashboard/jobSeeker" className="font-normal">
+            <Link href="/roadmap" className="font-normal">
               Dashboard
             </Link>
           </div>
