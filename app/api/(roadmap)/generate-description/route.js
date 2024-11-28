@@ -78,9 +78,39 @@ export async function POST(req) {
               {"text": "Option D", "isCorrect": false}
             ],
             "explanation": "Detailed explanation of why the correct answer is right"
+          },
+          {
+            "questionText": "Third multiple choice question",
+            "options": [
+              {"text": "Option A", "isCorrect": true},
+              {"text": "Option B", "isCorrect": false},
+              {"text": "Option C", "isCorrect": false},
+              {"text": "Option D", "isCorrect": false}
+            ],
+            "explanation": "Detailed explanation of why the correct answer is right"
+          },
+          {
+            "questionText": "Fourth multiple choice question",
+            "options": [
+              {"text": "Option A", "isCorrect": false},
+              {"text": "Option B", "isCorrect": false},
+              {"text": "Option C", "isCorrect": false},
+              {"text": "Option D", "isCorrect": true}
+            ],
+            "explanation": "Detailed explanation of why the correct answer is right"
+          },
+          {
+            "questionText": "Fifth multiple choice question",
+            "options": [
+              {"text": "Option A", "isCorrect": false},
+              {"text": "Option B", "isCorrect": true},
+              {"text": "Option C", "isCorrect": false},
+              {"text": "Option D", "isCorrect": false}
+            ],
+            "explanation": "Detailed explanation of why the correct answer is right"
           }
         ],
-        "totalQuestions": 2,
+        "totalQuestions": 5,
         "passingScore": 75
       },
       {
@@ -112,7 +142,7 @@ export async function POST(req) {
         - Include a detailed explanation for each question
         - Provide a clear structure with options and correct answers
         - Aim to test understanding, not just memorization
-    12. Include at least 2 multiple choice questions with 4 options each
+    12. Include at least 5 multiple choice questions with 4 options each
     13. Provide a passing score percentage
 `;
 
