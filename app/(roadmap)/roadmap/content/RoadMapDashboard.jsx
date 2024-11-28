@@ -169,7 +169,7 @@ const RoadmapDashboard = () => {
             </Button>
             <Button
               variant="outline"
-              onClick={()=>router.push(`/roadmap/create`)}
+              onClick={() => router.push(`/roadmap/create`)}
             >
               New Roadmap <PlusCircle className="w-4 h-4 ml-2" />
             </Button>
@@ -184,7 +184,14 @@ const RoadmapDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 max-h-64 overflow-y-auto">
+            <div
+              className="space-y-4 max-h-64 overflow-y-auto 
+      scrollbar-thin 
+      scrollbar-track-gray-100 
+      scrollbar-thumb-gray-300 
+      hover:scrollbar-thumb-gray-400 
+      rounded-scrollbar"
+            >
               {roadmap.map((section, index) => {
                 const sectionCompletedLevels = section.levels.filter(
                   (level) => level.completed

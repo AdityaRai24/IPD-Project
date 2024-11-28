@@ -10,10 +10,116 @@ import {
   BookMarked,
   Link,
   Play,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
+
+const QuizSection = ({ quizData }) => {
+  const [selectedAnswers, setSelectedAnswers] = useState(
+    new Array(quizData.questions.length).fill(null)
+  );
+  const [showResults, setShowResults] = useState(false);
+  const [score, setScore] = useState(0);
+
+  const handleAnswerSelect = (questionIndex, optionIndex) => {
+    if (!showResults) {
+      const newSelectedAnswers = [...selectedAnswers];
+      newSelectedAnswers[questionIndex] = optionIndex;
+      setSelectedAnswers(newSelectedAnswers);
+    }
+  };
+
+  const calculateScore = () => {
+    const correctAnswers = quizData.questions.reduce((acc, question, index) => {
+      const selectedOptionIndex = selectedAnswers[index];
+      return selectedOptionIndex !== null &&
+        question.options[selectedOptionIndex].isCorrect
+        ? acc + 1
+        : acc;
+    }, 0);
+
+    const scorePercentage = (correctAnswers / quizData.questions.length) * 100;
+    setScore(scorePercentage);
+    setShowResults(true);
+  };
+
+  return (
+    <div className="bg-gray-50 p-6 rounded-lg space-y-6">
+      {quizData.questions.map((question, questionIndex) => (
+        <div key={questionIndex} className="space-y-4">
+          <h3 className="text-xl font-semibold text-gray-800">
+            {question.questionText}
+          </h3>
+          <div className="space-y-3">
+            {question.options.map((option, optionIndex) => (
+              <button
+                key={optionIndex}
+                onClick={() => handleAnswerSelect(questionIndex, optionIndex)}
+                className={`
+                  w-full text-left p-3 rounded-lg border transition-colors 
+                  ${
+                    showResults && option.isCorrect
+                      ? "bg-green-100 border-green-300"
+                      : showResults &&
+                        selectedAnswers[questionIndex] === optionIndex &&
+                        !option.isCorrect
+                      ? "bg-red-100 border-red-300"
+                      : selectedAnswers[questionIndex] === optionIndex
+                      ? "bg-blue-100 border-blue-300"
+                      : "bg-white border-gray-200 hover:bg-gray-50"
+                  }
+                `}
+              >
+                {option.text}
+                {showResults && option.isCorrect && (
+                  <CheckCircle2 className="inline ml-2 text-green-600" />
+                )}
+                {showResults &&
+                  selectedAnswers[questionIndex] === optionIndex &&
+                  !option.isCorrect && (
+                    <XCircle className="inline ml-2 text-red-600" />
+                  )}
+              </button>
+            ))}
+          </div>
+          {showResults && (
+            <div className="bg-gray-100 p-4 rounded-lg">
+              <p className="font-medium">Explanation:</p>
+              <p>{question.explanation}</p>
+            </div>
+          )}
+        </div>
+      ))}
+      {!showResults && (
+        <Button
+          onClick={calculateScore}
+          disabled={selectedAnswers.some((answer) => answer === null)}
+          className="w-full"
+        >
+          Submit Quiz
+        </Button>
+      )}
+      {showResults && (
+        <div className="text-center space-y-4">
+          <h4 className="text-2xl font-bold">
+            Your Score: {score.toFixed(0)}%
+            {score >= quizData.passingScore ? (
+              <span className="text-green-600 ml-2">Passed!</span>
+            ) : (
+              <span className="text-red-600 ml-2">Failed</span>
+            )}
+          </h4>
+          <p className="text-gray-600">
+            Passing Score: {quizData.passingScore}%
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const LearningContentPage = () => {
   const [content, setContent] = useState([]);
@@ -120,8 +226,10 @@ const LearningContentPage = () => {
         );
 
       case "practiceExercise":
-        return (
-          <div className="space-y-4  p-6 rounded-lg my-6">
+        return item.quizType === "multipleChoice" ? (
+          <QuizSection quizData={item} />
+        ) : (
+          <div className="space-y-4 p-6 rounded-lg my-6">
             <p className="text-gray-700 text-lg">{item.content}</p>
             {item.starterCode && (
               <div className="mt-4">
@@ -187,28 +295,34 @@ const LearningContentPage = () => {
 
   return (
     <div className="w-full rounded-lg shadow-sm shadow-primary !bg-transparent mx-auto py-8 px-4">
-     {generating ? <div className="w-full min-h-screen flex items-center justify-center">Generating...</div> : <article className="w-full">
-        <Card className="border-0 !bg-transparent shadow-none">
-          <CardHeader className="pb-8">
-            <CardTitle className="text-4xl font-bold text-gray-900">
-              {topic}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-12">
-            {content.map((item, index) => (
-              <section key={index} className="space-y-4">
-                <div className="flex items-center gap-3 mb-6">
-                  {getIconForSection(item.type)}
-                  <h2 className="text-2xl font-semibold capitalize">
-                    {item.type.replace(/([A-Z])/g, " $1").trim()}
-                  </h2>
-                </div>
-                {renderContent(item)}
-              </section>
-            ))}
-          </CardContent>
-        </Card>
-      </article>}
+      {generating ? (
+        <div className="w-full min-h-screen flex items-center justify-center">
+          Generating...
+        </div>
+      ) : (
+        <article className="w-full">
+          <Card className="border-0 !bg-transparent shadow-none">
+            <CardHeader className="pb-8">
+              <CardTitle className="text-4xl font-bold text-gray-900">
+                {topic}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-12">
+              {content.map((item, index) => (
+                <section key={index} className="space-y-4">
+                  <div className="flex items-center gap-3 mb-6">
+                    {getIconForSection(item.type)}
+                    <h2 className="text-2xl font-semibold capitalize">
+                      {item.type.replace(/([A-Z])/g, " $1").trim()}
+                    </h2>
+                  </div>
+                  {renderContent(item)}
+                </section>
+              ))}
+            </CardContent>
+          </Card>
+        </article>
+      )}
     </div>
   );
 };

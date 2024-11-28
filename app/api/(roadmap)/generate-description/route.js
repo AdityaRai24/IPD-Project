@@ -57,8 +57,31 @@ export async function POST(req) {
       },
       {
         "type": "practiceExercise",
-        "content": "Exercise description",
-        "starterCode": "Code template if applicable"
+        "quizType": "multipleChoice",
+        "questions": [
+          {
+            "questionText": "Detailed multiple choice question about the topic",
+            "options": [
+              {"text": "Option A", "isCorrect": false},
+              {"text": "Option B", "isCorrect": true},
+              {"text": "Option C", "isCorrect": false},
+              {"text": "Option D", "isCorrect": false}
+            ],
+            "explanation": "Detailed explanation of why the correct answer is right"
+          },
+          {
+            "questionText": "Second multiple choice question",
+            "options": [
+              {"text": "Option A", "isCorrect": false},
+              {"text": "Option B", "isCorrect": false},
+              {"text": "Option C", "isCorrect": true},
+              {"text": "Option D", "isCorrect": false}
+            ],
+            "explanation": "Detailed explanation of why the correct answer is right"
+          }
+        ],
+        "totalQuestions": 2,
+        "passingScore": 75
       },
       {
         "type": "resources",
@@ -83,7 +106,15 @@ export async function POST(req) {
     8. Make sure the links you give are updated as of 2024 and properly working.
     9. Do not add something like ** in your response.
     10. The reference links should be from the official documentation or the mdn docs or w3 schools or geeks for geeks.
-    `;
+    11. For the practice exercise, create multiple choice questions that:
+        - Are directly related to the topic
+        - Cover different aspects of the learning material
+        - Include a detailed explanation for each question
+        - Provide a clear structure with options and correct answers
+        - Aim to test understanding, not just memorization
+    12. Include at least 2 multiple choice questions with 4 options each
+    13. Provide a passing score percentage
+`;
 
     const result = await chatSession.sendMessage(prompt);
     const responseText = await result.response.text();
