@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   Code2,
   BookOpen,
@@ -122,6 +123,7 @@ const QuizSection = ({ quizData }) => {
 };
 
 const LearningContentPage = () => {
+  const router = useRouter();
   const [content, setContent] = useState([]);
   const [error, setError] = useState(null);
   const searchParams = useSearchParams();
@@ -226,19 +228,17 @@ const LearningContentPage = () => {
         );
 
       case "practiceExercise":
-        return item.quizType === "multipleChoice" ? (
-          <QuizSection quizData={item} />
-        ) : (
-          <div className="space-y-4 p-6 rounded-lg my-6">
-            <p className="text-gray-700 text-lg">{item.content}</p>
-            {item.starterCode && (
-              <div className="mt-4">
-                <p className="text-sm font-medium mb-2">Starter Code:</p>
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-                  <code>{item.starterCode}</code>
-                </pre>
-              </div>
-            )}
+        return (
+          <div className="space-y-4 p-6 rounded-lg my-6 bg-gray-50 border border-gray-200">
+            <p className="text-lg text-gray-700 mb-4">
+              Test your knowledge with a practice quiz
+            </p>
+            <Button
+              onClick={() => router.push(`/roadmap/quiz?topic=${topic}`)}
+              className="w-full"
+            >
+              Take Quiz
+            </Button>
           </div>
         );
 
