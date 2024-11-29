@@ -64,7 +64,7 @@ const AddNewInterView = () => {
         "http://localhost:3000/api/generateInterview",
         { jobPosition, jobDescription, experience, demoOutput }
       );
-      router.push(`./jobSeeker/interview/${response.data.id}`);
+      router.push(`./dashboard/jobSeeker/interview/${response.data.id}`);
     } catch (error) {
       console.log(error);
     } finally {
