@@ -26,7 +26,7 @@ const QuizPage = () => {
       if (practiceSection) {
         setQuizData(practiceSection);
         setSelectedAnswers(
-          new Array(practiceSection.questions.length).fill(null)
+          new Array(practiceSection?.questions?.length).fill(null)
         );
       }
     }
@@ -73,7 +73,7 @@ const QuizPage = () => {
           Quiz: Practice Test
         </h1>
 
-        {quizData.questions.map((question, questionIndex) => (
+        {quizData?.questions?.map((question, questionIndex) => (
           <div key={questionIndex} className="mb-6">
             <h3 className="text-xl font-semibold mb-4">
               {question.questionText}

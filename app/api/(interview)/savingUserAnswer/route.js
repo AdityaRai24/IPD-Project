@@ -100,7 +100,7 @@ Please provide feedback in STRICT JSON format with these requirements:
 Example Format:
 [
   {
-    "modifiedResponse": "Corrected ${JSON.stringify(userAnswers)} text with grammar/pronunciation fixes",
+    "modifiedResponse": "Corrected ${JSON.stringify(userAnswers)} text with grammar/pronunciation fixes. Dont add anything. The answer should remain the same just fix grammar mistakes if any",
     "questionFeedback": "Detailed assessment of the response's technical depth, clarity, and relevance",
     "answerRating": "8"
   }

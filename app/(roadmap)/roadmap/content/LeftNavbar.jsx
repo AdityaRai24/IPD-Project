@@ -14,12 +14,14 @@ const LeftNavbar = () => {
     setRoadmap(content);
   }, []);
 
+  console.log(roadmap)
+
   return (
     <div
       className=" max-h-screen overflow-y-auto pb-16 fixed max-w-[20%]"
       style={{ scrollbarWidth: "thin" }} // Optional custom scrollbar styling for Firefox
     >
-      {roadmap.map((item, index) => {
+      {roadmap?.map((item, index) => {
         return (
           <div
             key={index}
