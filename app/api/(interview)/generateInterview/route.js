@@ -5,18 +5,19 @@ import prisma from "@/lib/db";
 
 export async function POST(req, res) {
   try {
-    const { jobPosition, jobDescription, experience, demoOutput } =
+    const { topic, noOfQuestions, difficulty, demoOutput  } =
       await req.json();
 
+      // console.log(topic,noOfQuestions,difficulty);
+
     const inputPrompt =
-      "Job position:" +
-      jobPosition +
-      "Job description" +
-      jobDescription +
-      " Years of Experience" +
-      experience +
-      "depends on Job Position, Job Description, Years of Experience give us " +
-      process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT +
+      "topic:" +
+      topic +
+      "Difficulty" +
+      difficulty +
+      "depends on topic and difficulty give" +
+      "Number of Questions" +
+      noOfQuestions +
       " interview question along with answer in JSON format, give us question and answer field on JSON .Only return the array dont give whitespace unecessary gve otuput in this format" +
       demoOutput;
 
@@ -34,9 +35,9 @@ export async function POST(req, res) {
           data: {
             mockId: uuidv4(),
             jsonMockResp: parsedJsonResponse,
-            jobPosition:jobPosition,
-            jobDescription:jobDescription,
-            exp:experience,
+            topic:topic,
+            difficulty:difficulty,
+            
           },
         });
         return NextResponse.json(response);

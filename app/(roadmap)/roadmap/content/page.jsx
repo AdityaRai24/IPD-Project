@@ -16,6 +16,17 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
+import AddNewInterView from "@/components/AddNewInterView";
+
+// const startInterview = (itemContent) => {
+//   console.log("Starting interview with content:", itemContent);
+//   return(
+//     <div className="flex justify-between items-center">
+//     <AddNewInterView />
+//   </div>
+//   )
+
+// };
 
 const QuizSection = ({ quizData }) => {
   const [selectedAnswers, setSelectedAnswers] = useState(
@@ -23,6 +34,7 @@ const QuizSection = ({ quizData }) => {
   );
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
+  
 
   const handleAnswerSelect = (questionIndex, optionIndex) => {
     if (!showResults) {
@@ -319,6 +331,16 @@ const LearningContentPage = () => {
                   {renderContent(item)}
                 </section>
               ))}
+
+              {/* <div className="mt-8 w-full">
+                <Button onClick={() => startInterview(topic)}>
+                  Start Interview
+                </Button>
+              </div> */}
+              <div className="flex justify-between items-center">
+                <AddNewInterView itemContent={topic} />
+              </div>
+              
             </CardContent>
           </Card>
         </article>
