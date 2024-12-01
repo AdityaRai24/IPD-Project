@@ -59,7 +59,7 @@ const StartInterview = ({ params }) => {
   return (
     <div className="flex items-center justify-center gap-8 h-[85vh]">
       <QuestionSection interviewData={interviewData} />
-      <RecordAnswer sessionId={sessionId} interviewData={interviewData} />
+      {/* <RecordAnswer sessionId={sessionId} interviewData={interviewData} /> */}
     </div>
   );
 };
