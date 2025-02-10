@@ -1,30 +1,27 @@
 import cv2
 import numpy as np
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_socketio import SocketIO, emit
-from flask_cors import CORS  # Keep this import
-import eventlet
-eventlet.monkey_patch()  # Important for Socket.IO compatibility
-
-from deepface import DeepFace
-import mediapipe as mp
+from flask_cors import CORS
 import base64
 import io
-from PIL import Image
+
+# Machine Learning and Computer Vision Libraries
+from deepface import DeepFace
+import mediapipe as mp
 
 app = Flask(__name__)
+
+# CORS configuration - allow all origins for development
 CORS(app, resources={
     r"/*": {
-        "origins": [
-            "http://localhost:3000",  # Next.js default port
-            "http://localhost:5000",  # Flask server port
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:5000"
-        ]
+        "origin": "*"
     }
 })
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+# Configure SocketIO with more permissive CORS settings
+socketio = SocketIO(app, cors_allowed_origins="*")
+
 # Initialize Mediapipe models
 mp_face_mesh = mp.solutions.face_mesh
 mp_pose = mp.solutions.pose
@@ -83,6 +80,7 @@ def calculate_posture_score(pose_landmarks):
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
+    emit('connection_response', {'message': 'Connected successfully'})
 
 @socketio.on('start_recording')
 def handle_start_recording():
@@ -144,4 +142,5 @@ def health_check():
     return jsonify({"status": "Server is running!"})
 
 if __name__ == '__main__':
+    # Use host='0.0.0.0' to make server accessible from other machines
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
