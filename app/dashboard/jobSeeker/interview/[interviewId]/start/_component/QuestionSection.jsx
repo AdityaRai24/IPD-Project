@@ -184,38 +184,29 @@ const QuestionSection = ({ interviewData }) => {
   }
 
   return (
-    <div className="flex w-full gap-6 h-[600px] p-4">
+    <div className="flex w-full gap-6 h-[600px]">
       {/* Left Section (Question and Answer) */}
       <Card className="w-[45%] flex flex-col">
         <CardContent className="p-6 flex flex-col h-full gap-4">
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-            <h2 className="text-gray-700 font-medium mb-3">
+          <div className="bg-muted rounded-lg p-4">
+            <h2 className="text-foreground font-medium mb-3">
               Question {activeQuestionIndex + 1} / {totalQuestions}
             </h2>
-            <Progress
-              value={((activeQuestionIndex + 1) / totalQuestions) * 100}
-              className="h-2 rounded-full"
-            />
+            <Progress value={((activeQuestionIndex + 1) / totalQuestions) * 100} className="h-2" />
           </div>
 
           <div className="flex-grow flex flex-col gap-4">
-            <div className="px-5 py-4 font-medium rounded-lg bg-gray-50 text-gray-800 text-lg border border-gray-100">
+            <div className="px-5 py-4 font-medium rounded-lg bg-muted text-foreground text-lg">
               {interviewData?.jsonMockResp[activeQuestionIndex]?.question}
             </div>
 
-            <div className="flex-grow w-full rounded-lg border border-gray-200 p-5 bg-gray-50 text-gray-700">
+            <div className="flex-grow w-full rounded-lg border p-5 bg-muted text-foreground">
               {listening ? (
                 <div className="animate-fade-in">{transcript}</div>
               ) : isSaving ? (
-                <div className="text-gray-500 animate-pulse">
-                  Your answer is being saved...
-                </div>
+                <div className="text-muted-foreground animate-pulse">Your answer is being saved...</div>
               ) : (
-                <div
-                  className={`${
-                    userAnswers[activeQuestionIndex] ? "" : "text-gray-400"
-                  }`}
-                >
+                <div className={`${userAnswers[activeQuestionIndex] ? "" : "text-muted-foreground"}`}>
                   {userAnswers[activeQuestionIndex] || "Record Your Answer..."}
                 </div>
               )}
@@ -224,11 +215,7 @@ const QuestionSection = ({ interviewData }) => {
 
           <div className="flex items-center justify-between w-full">
             <Button
-              onClick={() =>
-                textToSpeech(
-                  interviewData?.jsonMockResp[activeQuestionIndex]?.question
-                )
-              }
+              onClick={() => textToSpeech(interviewData?.jsonMockResp[activeQuestionIndex]?.question)}
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -237,9 +224,7 @@ const QuestionSection = ({ interviewData }) => {
             </Button>
 
             <Button
-              className={`w-[140px] ${
-                listening ? "bg-red-500 hover:bg-red-600" : ""
-              }`}
+              className={`w-[140px] ${listening ? "bg-destructive hover:bg-destructive/90" : ""}`}
               onClick={recordUserAnswer}
               disabled={isSaving}
             >
@@ -250,7 +235,7 @@ const QuestionSection = ({ interviewData }) => {
                 </span>
               ) : isSaving ? (
                 <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                   Saving...
                 </span>
               ) : (
@@ -267,7 +252,7 @@ const QuestionSection = ({ interviewData }) => {
       {/* Right Section (Video Analysis) */}
       <Card className="flex-1">
         <CardContent className="p-6">
-          <VideoAnalysis />
+          <ConfidenceRecorder onData={handleConfidenceData} />
         </CardContent>
       </Card>
     </div>
