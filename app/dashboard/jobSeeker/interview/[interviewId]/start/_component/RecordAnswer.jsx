@@ -101,7 +101,7 @@ const RecordAnswer = ({
           }}
         />
       </div>
-      <div className="flex justify-end w-[500px]">
+      {/* <div className="flex justify-end w-[500px]">
         <Button className="my-10 w-[170px]" onClick={saveUserAnswer}>
           {isRecording ? (
             <h2 className="flex gap-2">
@@ -113,8 +113,8 @@ const RecordAnswer = ({
             </h2>
           )}
         </Button>
-      </div>
-      <Button onClick={() => console.log(userAnswer)}>Show User Answer</Button>
+      </div> */}
+      {/* <Button onClick={() => console.log(userAnswer)}>Show User Answer</Button> */}
     </div>
   );
 };
