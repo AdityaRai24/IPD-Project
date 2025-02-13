@@ -113,7 +113,7 @@ const RecordAnswer = ({
             </h2>
           )}
         </Button>
-      </div> */}
+      </div>
       {/* <Button onClick={() => console.log(userAnswer)}>Show User Answer</Button> */}
     </div>
   );
