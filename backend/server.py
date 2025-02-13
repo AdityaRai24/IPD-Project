@@ -5,7 +5,10 @@ import numpy as np
 from deepface import DeepFace
 import mediapipe as mp
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize MediaPipe modules for face and pose estimation
@@ -19,10 +22,11 @@ def analyze_emotion(frame):
     try:
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = DeepFace.analyze(frame_rgb, actions=['emotion'], enforce_detection=False)
-        # DeepFace returns a list; we extract the first analysis result.
+        # DeepFace returns a list; we extract the first analysis result
         emotion = result[0]['dominant_emotion']
-        confidence = result[0]['emotion'][emotion]
-        return emotion, confidence
+        # Ensure confidence is between 0 and 100
+        confidence = min(100.0, result[0]['emotion'][emotion])
+        return emotion, confidence / 100  # Convert to decimal (0-1 range)
     except Exception as e:
         print(f"DeepFace error: {e}")
         return None, 0
@@ -104,7 +108,7 @@ def handle_frame(data):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return "Server is running!"
 
 # ---------------- Main ---------------- #
 
