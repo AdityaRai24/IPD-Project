@@ -10,277 +10,160 @@ import {
   AlertCircle,
   BookMarked,
   Link,
-  Play,
-  CheckCircle2,
-  XCircle,
+  Lightbulb,
+  List,
+  FileCode,
+  Copy,
+  CheckCircle,
+  RefreshCw,
+  ArrowLeft,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
-import AddNewInterView from "@/components/AddNewInterView";
+import QuizSection from "../quiz/page";
 
-// const startInterview = (itemContent) => {
-//   console.log("Starting interview with content:", itemContent);
-//   return(
-//     <div className="flex justify-between items-center">
-//     <AddNewInterView />
-//   </div>
-//   )
+const CodeBlock = ({ content, language }) => {
+  const [copied, setCopied] = useState(false);
 
-// };
-
-const QuizSection = ({ quizData }) => {
-  const [selectedAnswers, setSelectedAnswers] = useState(
-    new Array(quizData.questions.length).fill(null)
-  );
-  const [showResults, setShowResults] = useState(false);
-  const [score, setScore] = useState(0);
-  
-
-  const handleAnswerSelect = (questionIndex, optionIndex) => {
-    if (!showResults) {
-      const newSelectedAnswers = [...selectedAnswers];
-      newSelectedAnswers[questionIndex] = optionIndex;
-      setSelectedAnswers(newSelectedAnswers);
-    }
-  };
-
-  const calculateScore = () => {
-    const correctAnswers = quizData.questions.reduce((acc, question, index) => {
-      const selectedOptionIndex = selectedAnswers[index];
-      return selectedOptionIndex !== null &&
-        question.options[selectedOptionIndex].isCorrect
-        ? acc + 1
-        : acc;
-    }, 0);
-
-    const scorePercentage = (correctAnswers / quizData.questions.length) * 100;
-    setScore(scorePercentage);
-    setShowResults(true);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="bg-gray-50 p-6 rounded-lg space-y-6">
-      {quizData.questions.map((question, questionIndex) => (
-        <div key={questionIndex} className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800">
-            {question.questionText}
-          </h3>
-          <div className="space-y-3">
-            {question.options.map((option, optionIndex) => (
-              <button
-                key={optionIndex}
-                onClick={() => handleAnswerSelect(questionIndex, optionIndex)}
-                className={`
-                  w-full text-left p-3 rounded-lg border transition-colors 
-                  ${
-                    showResults && option.isCorrect
-                      ? "bg-green-100 border-green-300"
-                      : showResults &&
-                        selectedAnswers[questionIndex] === optionIndex &&
-                        !option.isCorrect
-                      ? "bg-red-100 border-red-300"
-                      : selectedAnswers[questionIndex] === optionIndex
-                      ? "bg-blue-100 border-blue-300"
-                      : "bg-white border-gray-200 hover:bg-gray-50"
-                  }
-                `}
-              >
-                {option.text}
-                {showResults && option.isCorrect && (
-                  <CheckCircle2 className="inline ml-2 text-green-600" />
-                )}
-                {showResults &&
-                  selectedAnswers[questionIndex] === optionIndex &&
-                  !option.isCorrect && (
-                    <XCircle className="inline ml-2 text-red-600" />
-                  )}
-              </button>
-            ))}
-          </div>
-          {showResults && (
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <p className="font-medium">Explanation:</p>
-              <p>{question.explanation}</p>
-            </div>
-          )}
-        </div>
-      ))}
-      {!showResults && (
-        <Button
-          onClick={calculateScore}
-          disabled={selectedAnswers.some((answer) => answer === null)}
-          className="w-full"
-        >
-          Submit Quiz
-        </Button>
-      )}
-      {showResults && (
-        <div className="text-center space-y-4">
-          <h4 className="text-2xl font-bold">
-            Your Score: {score.toFixed(0)}%
-            {score >= quizData.passingScore ? (
-              <span className="text-green-600 ml-2">Passed!</span>
+    <div className="relative group">
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-blue-500 rounded-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+      <div className="relative">
+        <div className="flex items-center justify-between bg-gray-800 rounded-t-xl px-4 py-2">
+          <Badge variant="secondary" className="bg-gray-700 text-gray-200">
+            {language}
+          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-gray-400 hover:text-white"
+            onClick={handleCopy}
+          >
+            {copied ? (
+              <CheckCircle className="w-4 h-4 text-green-500" />
             ) : (
-              <span className="text-red-600 ml-2">Failed</span>
+              <Copy className="w-4 h-4" />
             )}
-          </h4>
-          <p className="text-gray-600">
-            Passing Score: {quizData.passingScore}%
-          </p>
+          </Button>
         </div>
-      )}
+        <pre className="bg-gray-900 text-gray-100 p-6 rounded-b-xl overflow-x-auto font-mono text-sm leading-relaxed">
+          <code>{content}</code>
+        </pre>
+      </div>
     </div>
   );
 };
 
 const LearningContentPage = () => {
   const router = useRouter();
-  const [content, setContent] = useState([]);
+  const [content, setContent] = useState(null);
   const [error, setError] = useState(null);
   const searchParams = useSearchParams();
   const topic = searchParams.get("topic");
+  const sectionIdx = searchParams.get("sectionIdx");
+  const levelId = searchParams.get("levelId");
   const [generating, setGenerating] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const generateContent = async () => {
+    if (!topic || generating) return;
+
+    const parsed = JSON.parse(localStorage.getItem("roadmap"));
+    const details = parsed[sectionIdx].levels[levelId].details.join(",");
+
     try {
       setGenerating(true);
+      setError(null);
       const response = await axios.post(
         "http://localhost:3000/api/generate-description",
-        { description: topic },
+        { description: topic, details: details },
         { timeout: 30000 }
       );
 
-      setContent(response.data);
-      localStorage.setItem(topic, JSON.stringify(response.data));
-      setGenerating(false);
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(response.data);
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        setError("Invalid response format");
+        return;
+      }
+
+      setContent(parsedResponse);
+      localStorage.setItem(topic, JSON.stringify(parsedResponse));
     } catch (error) {
+      console.error("Generation error:", error);
+      setError(error.response?.data?.message || "Failed to generate content");
+    } finally {
       setGenerating(false);
-      console.log(error);
     }
   };
 
   useEffect(() => {
-    if (!JSON.parse(localStorage.getItem(topic))) {
-      generateContent();
+    if (!topic || hasInitialized) return;
+
+    setHasInitialized(true);
+    const cachedContent = localStorage.getItem(topic);
+
+    if (cachedContent) {
+      try {
+        setContent(JSON.parse(cachedContent));
+      } catch (error) {
+        console.error("Failed to parse cached content:", error);
+        generateContent();
+      }
     } else {
-      setContent(JSON.parse(localStorage.getItem(topic)));
+      generateContent();
     }
-  }, [topic]);
+  }, [topic, hasInitialized]);
 
   const getIconForSection = (type) => {
-    switch (type) {
-      case "introduction":
-        return <BookOpen className="w-6 h-6" />;
-      case "keyConcepts":
-        return <BookMarked className="w-6 h-6" />;
-      case "codeExample":
-        return <Code2 className="w-6 h-6" />;
-      case "commonMistakes":
-        return <AlertCircle className="w-6 h-6" />;
-      case "resources":
-        return <Link className="w-6 h-6" />;
-      default:
-        return <BookMarked className="w-6 h-6" />;
-    }
+    const icons = {
+      introduction: <BookOpen className="w-6 h-6" />,
+      concepts: <Lightbulb className="w-6 h-6" />,
+      examples: <Code2 className="w-6 h-6" />,
+      conclusion: <BookMarked className="w-6 h-6" />,
+      resources: <Link className="w-6 h-6" />,
+      diagram: <FileCode className="w-6 h-6" />,
+      default: <List className="w-6 h-6" />,
+    };
+    return icons[type] || icons.default;
   };
 
-  const renderContent = (item) => {
-    if (!item || !item.type) return null;
+  const renderContentBlock = (block) => {
+    if (!block?.type) return null;
 
-    switch (item.type) {
-      case "introduction":
-        return (
-          <p className="text-gray-700 leading-relaxed text-lg">
-            {item.content}
-          </p>
-        );
+    switch (block.type) {
+      case "text":
+        return block.content ? (
+          <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed">
+            {block.content}
+          </div>
+        ) : null;
 
-      case "keyConcepts":
-      case "bestPractices":
-      case "commonMistakes":
-        return (
-          <ul className="list-disc list-inside space-y-3 text-lg">
-            {Array.isArray(item.content) &&
-              item.content.map((concept, idx) => (
-                <li key={idx} className="text-gray-700">
-                  {concept}
-                </li>
-              ))}
+      case "list":
+        return block.items?.length ? (
+          <ul className="space-y-3">
+            {block.items.map((item, itemIdx) => (
+              <li key={itemIdx} className="flex items-start gap-3 text-gray-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-2.5" />
+                <span className="flex-1">{item}</span>
+              </li>
+            ))}
           </ul>
-        );
+        ) : null;
 
-      case "codeExample":
-        return (
-          <div className="space-y-4 my-6">
-            <div className="relative">
-              <pre className="bg-gray-900 text-gray-100 p-6 rounded-lg overflow-x-auto">
-                <code>{item.content}</code>
-              </pre>
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute top-3 right-3"
-                onClick={() => navigator.clipboard.writeText(item.content)}
-              >
-                Copy
-              </Button>
-            </div>
-            {item.language && (
-              <Badge className="text-sm">{item.language}</Badge>
-            )}
-          </div>
-        );
-
-      case "codeExplanation":
-        return (
-          <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg">
-            {item.content}
-          </p>
-        );
-
-      case "practiceExercise":
-        return (
-          <div className="space-y-4 p-6 rounded-lg my-6 bg-gray-50 border border-gray-200">
-            <p className="text-lg text-gray-700 mb-4">
-              Test your knowledge with a practice quiz
-            </p>
-            <Button
-              onClick={() => router.push(`/roadmap/quiz?topic=${topic}`)}
-              className="w-full"
-            >
-              Take Quiz
-            </Button>
-          </div>
-        );
-
-      case "resources":
-        return (
-          <div className="grid gap-4 my-6">
-            {Array.isArray(item.content) &&
-              item.content.map((resource, idx) => (
-                <a
-                  key={idx}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center p-4  rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  {resource.type === "video" ? (
-                    <Play className="w-5 h-5 mr-3 text-red-500" />
-                  ) : (
-                    <Link className="w-5 h-5 mr-3 text-blue-500" />
-                  )}
-                  <div>
-                    <p className="font-medium text-lg">{resource.title}</p>
-                    <Badge variant="outline" className="mt-2">
-                      {resource.type}
-                    </Badge>
-                  </div>
-                </a>
-              ))}
-          </div>
-        );
+      case "code":
+        return block.content ? (
+          <CodeBlock content={block.content} language={block.language} />
+        ) : null;
 
       default:
         return null;
@@ -289,62 +172,114 @@ const LearningContentPage = () => {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto ">
-        <Alert variant="destructive">
+      <div className="max-w-5xl mx-auto p-4">
+        <Alert variant="destructive" className="shadow-lg">
+          <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  if (!content.length) {
+  if (!content) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-500">Loading...</div>
+        <div className="flex items-center gap-3 text-slate-500 text-lg">
+          <RefreshCw className="w-5 h-5 animate-spin" />
+          {generating ? "Generating content..." : "Loading..."}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full rounded-lg shadow-sm shadow-primary !bg-transparent mx-auto py-8 px-4">
-      {generating ? (
-        <div className="w-full min-h-screen flex items-center justify-center">
-          Generating...
-        </div>
-      ) : (
-        <article className="w-full">
-          <Card className="border-0 !bg-transparent shadow-none">
-            <CardHeader className="pb-8">
-              <CardTitle className="text-4xl font-bold text-gray-900">
-                {topic}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-12">
-              {content.map((item, index) => (
-                <section key={index} className="space-y-4">
-                  <div className="flex items-center gap-3 mb-6">
-                    {getIconForSection(item.type)}
-                    <h2 className="text-2xl font-semibold capitalize">
-                      {item.type.replace(/([A-Z])/g, " $1").trim()}
-                    </h2>
-                  </div>
-                  {renderContent(item)}
-                </section>
-              ))}
-
-              {/* <div className="mt-8 w-full">
-                <Button onClick={() => startInterview(topic)}>
-                  Start Interview
-                </Button>
-              </div> */}
-              <div className="flex justify-between items-center">
-                <AddNewInterView itemContent={topic} />
+    <div className="pt-20 px-4 bg-gray-100 min-h-screen">
+      <article className="max-w-5xl mx-auto space-y-8">
+        {/* Header Section */}
+        <Card className="border-0 shadow-md bg-gray-50 rounded-lg overflow-hidden">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-200/10 to-blue-200/10" />
+            <CardHeader className="relative space-y-6 p-8">
+              <div className="space-y-4">
+                <CardTitle className="text-4xl font-bold text-gray-900 tracking-tight">
+                  {content.title}
+                </CardTitle>
+                {content.description && (
+                  <p className="text-xl text-gray-600 leading-relaxed">
+                    {content.description}
+                  </p>
+                )}
               </div>
-              
+            </CardHeader>
+          </div>
+
+          {/* Content Sections */}
+          <CardContent className="p-8 space-y-12">
+            {content.sections?.map((section, index) => (
+              <section key={index} className="space-y-6">
+                {/* Section Header */}
+                <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-pink-500/10 to-blue-500/10 text-pink-600">
+                    {getIconForSection(section.type)}
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+                    {section.title}
+                  </h2>
+                </div>
+
+                {/* Section Content */}
+                <div className="space-y-8 pl-4">
+                  {section.content?.map((block, idx) => (
+                    <div key={idx} className="space-y-4">
+                      {block.subtitle && (
+                        <h3 className="text-xl font-semibold text-gray-700 mb-4">
+                          {block.subtitle}
+                        </h3>
+                      )}
+                      {renderContentBlock(block)}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+
+            {/* Navigation Footer */}
+            <div className="flex justify-between items-center pt-8 mt-12 border-t border-gray-100">
+              <Button
+                variant="outline"
+                onClick={() => router.back()}
+                className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Topics
+              </Button>
+
+              {topic && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    localStorage.removeItem(topic);
+                    setHasInitialized(false);
+                  }}
+                  className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Regenerate Content
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quiz Section */}
+        {content?.quiz && (
+          <Card className="border-0 shadow-xl bg-white rounded-2xl">
+            <CardContent className="p-8">
+              <QuizSection quizData={content.quiz} />
             </CardContent>
           </Card>
-        </article>
-      )}
+        )}
+      </article>
     </div>
   );
 };

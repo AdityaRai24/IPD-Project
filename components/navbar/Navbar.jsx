@@ -21,16 +21,16 @@ const Navbar = () => {
   }, [status]);
 
   return (
-    <div className="border-b sticky">
+    <div className="fixed top-0 left-0 w-full z-50 bg-white shadow-md backdrop-blur-lg border-b">
       <div
         className={cn(
-          "flex max-w-[85%] mx-auto   justify-between items-center",
+          "flex max-w-[85%] mx-auto justify-between items-center",
           pathname === "/" ? "p-8" : "p-3"
         )}
       >
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center justify-center gap-2">
-          <Image src={'/logo.png'} width={25} height={25} alt="Logo"   />
+            <Image src={"/logo.png"} width={25} height={25} alt="Logo" />
             <h1 className="text-2xl font-bold">
               Emplo<span className="text-primary">Ease</span>
             </h1>
@@ -52,28 +52,22 @@ const Navbar = () => {
         </div>
         <div>
           {isLoading ? (
-            <>
-              <img
-               className="w-[45px] rounded-full border-primary border"
-                src="https://w7.pngwing.com/pngs/177/551/png-transparent-user-interface-design-computer-icons-default-stephen-salazar-graphy-user-interface-design-computer-wallpaper-sphere-thumbnail.png"
-                alt=""
-              />
-            </>
+            <img
+              className="w-[45px] rounded-full border-primary border"
+              src="https://w7.pngwing.com/pngs/177/551/png-transparent-user-interface-design-computer-icons-default-stephen-salazar-graphy-user-interface-design-computer-wallpaper-sphere-thumbnail.png"
+              alt=""
+            />
+          ) : session?.user ? (
+            <User />
           ) : (
-            <>
-              {session?.user ? (
-                <User />
-              ) : (
-                <ul className="flex gap-6">
-                  <Button variant="ghost">
-                    <Link href="/authenticate">Login</Link>
-                  </Button>
-                  <Button className="active:scale-[0.95] hover:scale-[1.05] transition duration-300 ease-in px-6 py-[20px]  rounded-full ">
-                    <Link href="/authenticate">Register</Link>
-                  </Button>
-                </ul>
-              )}
-            </>
+            <ul className="flex gap-6">
+              <Button variant="ghost">
+                <Link href="/authenticate">Login</Link>
+              </Button>
+              <Button className="active:scale-[0.95] hover:scale-[1.05] transition duration-300 ease-in px-6 py-[20px] rounded-full">
+                <Link href="/authenticate">Register</Link>
+              </Button>
+            </ul>
           )}
         </div>
       </div>

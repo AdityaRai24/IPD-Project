@@ -1,186 +1,178 @@
-import { chatSession } from "@/utils/GenminiAiModel";
 import { NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
-import prisma from "@/lib/db";
+import { HfInference } from "@huggingface/inference";
+import { Pinecone } from "@pinecone-database/pinecone";
+import { chatSession } from "@/utils/GenminiAiModel";
+
+const hf = new HfInference(process.env.HF_TOKEN);
+const pinecone = new Pinecone({
+  apiKey: process.env.PINECONE_API_KEY ?? "",
+});
+
+async function queryPineconeVectorStore(client, indexName, namespace, query) {
+  try {
+    if (!query.trim()) {
+      throw new Error("Query string cannot be empty");
+    }
+
+    if (!process.env.HF_TOKEN) {
+      throw new Error("HF_TOKEN environment variable is not set");
+    }
+
+    console.log("Fetching embedding for query:", query);
+    const apiOutput = await hf.featureExtraction({
+      model: "mixedbread-ai/mxbai-embed-large-v1",
+      inputs: query.trim(),
+    });
+
+    if (!apiOutput) {
+      throw new Error("No embedding output received");
+    }
+
+    const queryEmbedding = Array.from(apiOutput);
+    if (queryEmbedding.length === 0) {
+      throw new Error("Empty embedding received");
+    }
+
+    console.log("Query Embedding:", queryEmbedding);
+
+    const index = client.Index(indexName);
+    const indexInfo = await index.describeIndexStats();
+    console.log("Index Stats:", indexInfo);
+
+    if (!indexInfo || Object.keys(indexInfo).length === 0) {
+      throw new Error("Index not found or empty");
+    }
+
+    const queryResponse = await index.namespace(namespace).query({
+      topK: 5,
+      vector: queryEmbedding,
+      includeMetadata: true,
+      includeValues: false,
+    });
+
+    console.log(
+      "Pinecone Query Response:",
+      JSON.stringify(queryResponse, null, 2)
+    );
+
+    if (!queryResponse || !queryResponse.matches) {
+      return "<nomatches>";
+    }
+
+    const concatenatedRetrievals = queryResponse.matches
+      .filter((match) => match.metadata?.chunk)
+      .map(
+        (match, index) => `\nResult ${index + 1}: \n ${match.metadata?.chunk}`
+      )
+      .join(". \n\n");
+
+    return concatenatedRetrievals || "<nomatches>";
+  } catch (error) {
+    console.error("Error in queryPineconeVectorStore:", error);
+    throw error;
+  }
+}
 
 export async function POST(req) {
   try {
     if (!req.body) {
       return NextResponse.json(
-        {
-          error: "Missing request body",
-        },
+        { error: "Missing request body" },
         { status: 400 }
       );
     }
 
     const body = await req.json();
     const description = body.description;
+    const details = body.details;
 
-    if (!description || typeof description !== "string") {
+    if (
+      !description ||
+      typeof description !== "string" ||
+      !details ||
+      typeof details !== "string"
+    ) {
       return NextResponse.json(
-        {
-          error: "Invalid or missing description",
-        },
+        { error: "Invalid or missing description" },
         { status: 400 }
       );
     }
 
-    const prompt = `
-    You are a JSON generator. Your task is to generate learning content for "${description}" in a strict JSON array format.
-    Follow this exact structure without any additional text or markdown:
-    [
-      {
-        "type": "introduction",
-        "content": "2-3 sentences introduction"
-      },
-      {
-        "type": "keyConcepts",
-        "content": ["concept1", "concept2", "concept3"]
-      },
-      {
-        "type": "codeExample",
-        "content": "your code here",
-        "language": "appropriate language"
-      },
-      {
-        "type": "codeExplanation",
-        "content": "Step by step explanation"
-      },
-      {
-        "type": "bestPractices",
-        "content": ["practice1", "practice2", "practice3"]
-      },
-      {
-        "type": "commonMistakes",
-        "content": ["mistake1", "mistake2", "mistake3"]
-      },
-      {
-        "type": "practiceExercise",
-        "quizType": "multipleChoice",
-        "questions": [
-          {
-            "questionText": "Detailed multiple choice question about the topic",
-            "options": [
-              {"text": "Option A", "isCorrect": false},
-              {"text": "Option B", "isCorrect": true},
-              {"text": "Option C", "isCorrect": false},
-              {"text": "Option D", "isCorrect": false}
-            ],
-            "explanation": "Detailed explanation of why the correct answer is right"
-          },
-          {
-            "questionText": "Second multiple choice question",
-            "options": [
-              {"text": "Option A", "isCorrect": false},
-              {"text": "Option B", "isCorrect": false},
-              {"text": "Option C", "isCorrect": true},
-              {"text": "Option D", "isCorrect": false}
-            ],
-            "explanation": "Detailed explanation of why the correct answer is right"
-          },
-          {
-            "questionText": "Third multiple choice question",
-            "options": [
-              {"text": "Option A", "isCorrect": true},
-              {"text": "Option B", "isCorrect": false},
-              {"text": "Option C", "isCorrect": false},
-              {"text": "Option D", "isCorrect": false}
-            ],
-            "explanation": "Detailed explanation of why the correct answer is right"
-          },
-          {
-            "questionText": "Fourth multiple choice question",
-            "options": [
-              {"text": "Option A", "isCorrect": false},
-              {"text": "Option B", "isCorrect": false},
-              {"text": "Option C", "isCorrect": false},
-              {"text": "Option D", "isCorrect": true}
-            ],
-            "explanation": "Detailed explanation of why the correct answer is right"
-          },
-          {
-            "questionText": "Fifth multiple choice question",
-            "options": [
-              {"text": "Option A", "isCorrect": false},
-              {"text": "Option B", "isCorrect": true},
-              {"text": "Option C", "isCorrect": false},
-              {"text": "Option D", "isCorrect": false}
-            ],
-            "explanation": "Detailed explanation of why the correct answer is right"
-          }
-        ],
-        "totalQuestions": 5,
-        "passingScore": 75
-      },
-      {
-        "type": "resources",
-        "content": [
-          {
-            "title": "Resource title",
-            "url": "URL",
-            "type": "documentation|video|tutorial"
-          }
-        ]
-      }
-    ]
+    const query = `Represent this for searching relevant passages:\n\n${description} ${details}`;
+    const retrievals = await queryPineconeVectorStore(
+      pinecone,
+      "index-one",
+      "testspace",
+      query
+    );
 
-    Important:
-    1. Ensure the response is a valid JSON array
-    2. Do not include any markdown code blocks or additional text
-    3. Escape any special characters in strings
-    4. Use double quotes for all keys and string values
-    5. Do not include any comments or explanations outside the JSON structure
-    6. Whenever you are writing some theory content. Try to write it as in detail as you can.
-    7. Do not use back tick (\`\`) anywhere in your code.
-    8. Make sure the links you give are updated as of 2024 and properly working.
-    9. Do not add something like ** in your response.
-    10. The reference links should be from the official documentation or the mdn docs or w3 schools or geeks for geeks.
-    11. For the practice exercise, create multiple choice questions that:
-        - Are directly related to the topic
-        - Cover different aspects of the learning material
-        - Include a detailed explanation for each question
-        - Provide a clear structure with options and correct answers
-        - Aim to test understanding, not just memorization
-    12. Include at least 5 multiple choice questions with 4 options each
-    13. Provide a passing score percentage
-`;
+    const inputPrompt = `You are a technical content creator specialized in creating in-depth blog articles.
+     Create a comprehensive article about ${description}. While you are creating the article, make sure to include the following details and course : ${details}.
 
-    const result = await chatSession.sendMessage(prompt);
-    const responseText = await result.response.text();
+    Use the following references: ${retrievals}
 
-    const cleanupResponse = (response) => {
-      let cleaned = response.replace(/```json\s?|\s?```/g, "");
 
-      cleaned = cleaned.trim();
-
-      const firstBracket = cleaned.indexOf("[");
-      const lastBracket = cleaned.lastIndexOf("]") + 1;
-      if (firstBracket !== -1 && lastBracket !== -1) {
-        cleaned = cleaned.slice(firstBracket, lastBracket);
-      }
-
-      return cleaned;
-    };
-
-    try {
-      const cleanedResponse = cleanupResponse(responseText);
-      const parsedResponse = JSON.parse(cleanedResponse);
-
-      if (!Array.isArray(parsedResponse)) {
-        throw new Error("Response is not an array");
-      }
-      return NextResponse.json(parsedResponse);
-    } catch (parseError) {
-      console.error("JSON parsing error:", parseError);
-      return NextResponse.json(
+    Structure the response as a JSON object with the following format:
+    {
+      "title": "Main title of the article",
+      "description": "Brief overview of what will be covered",
+      "sections": [
         {
-          error: "Failed to parse generated content",
-          message: parseError.message,
+          "type": "introduction",
+          "title": "Introduction",
+          "content": [
+            {
+              "type": "text",
+              "content": "Introductory paragraph..."
+            }
+          ]
         },
-        { status: 500 }
-      );
+        {
+          "type": "concepts",
+          "title": "Key Concepts",
+          "content": [
+            {
+              "subtitle": "Important Concept 1",
+              "type": "text",
+              "content": "Explanation..."
+            },
+            {
+              "type": "list",
+              "items": ["Point 1", "Point 2", "Point 3"]
+            }
+          ]
+        },
+        {
+          "type": "examples",
+          "title": "Practical Examples",
+          "content": [
+            {
+              "subtitle": "Example 1",
+              "type": "code",
+              "language": "javascript",
+              "content": "// Code example here"
+            },
+            {
+              "type": "text",
+              "content": "Explanation of the code..."
+            }
+          ]
+        }
+      ]
     }
+
+    Ensure each section is detailed and includes relevant examples where appropriate. Include code samples for technical topics.
+    
+    Return the data in a proper json format so that it is directly parsable. dont add anything before or after.Also generate a 5 question mcq quiz on this topic and return with this json object.
+    `;
+
+    const result = await chatSession.sendMessage(inputPrompt);
+    const geminiResponse = result.response
+      .text()
+      .replace("```json", "")
+      .replace("```", "");
+
+    return NextResponse.json(geminiResponse);
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(

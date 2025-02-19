@@ -1,165 +1,191 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import axios from "axios";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useState } from "react";
 
-const QuizPage = () => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [quizData, setQuizData] = useState(null);
-  const [selectedAnswers, setSelectedAnswers] = useState([]);
+const QuizSection = ({ quizData }) => {
+  const questions = quizData || [];
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState(
+    new Array(questions.length).fill(null)
+  );
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
 
-  useEffect(() => {
-    const topic = searchParams.get("topic");
-    const storedContent = localStorage.getItem(topic);
+  if (!questions.length) return null;
 
-    if (storedContent) {
-      const parsedContent = JSON.parse(storedContent);
-      const practiceSection = parsedContent.find(
-        (section) => section.type === "practiceExercise"
-      );
-
-      if (practiceSection) {
-        setQuizData(practiceSection);
-        setSelectedAnswers(
-          new Array(practiceSection?.questions?.length).fill(null)
-        );
-      }
-    }
-  }, []);
-
-  const handleAnswerSelect = (questionIndex, optionIndex) => {
+  const handleAnswerSelect = (answer) => {
     if (!showResults) {
       const newSelectedAnswers = [...selectedAnswers];
-      newSelectedAnswers[questionIndex] = optionIndex;
+      newSelectedAnswers[currentQuestionIndex] = answer;
       setSelectedAnswers(newSelectedAnswers);
     }
   };
 
   const calculateScore = () => {
-    if (!quizData) return;
-
-    const correctAnswers = quizData.questions.reduce((acc, question, index) => {
-      const selectedOptionIndex = selectedAnswers[index];
-      return selectedOptionIndex !== null &&
-        question.options[selectedOptionIndex].isCorrect
-        ? acc + 1
-        : acc;
+    const correctAnswers = questions.reduce((acc, question, index) => {
+      return selectedAnswers[index] === question.answer ? acc + 1 : acc;
     }, 0);
-
-    const scorePercentage = (correctAnswers / quizData.questions.length) * 100;
-    setScore(scorePercentage);
+    setScore((correctAnswers / questions.length) * 100);
     setShowResults(true);
   };
 
-  const restartQuiz = () => {
-    setSelectedAnswers(new Array(quizData.questions.length).fill(null));
-    setShowResults(false);
-    setScore(0);
+  const handlePrevQuestion = () => {
+    setCurrentQuestionIndex((prev) => Math.max(0, prev - 1));
   };
 
-  if (!quizData) {
-    return <div className="text-center mt-10">Loading Quiz...</div>;
-  }
+  const handleNextQuestion = () => {
+    setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1));
+  };
+
+  const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Quiz: Practice Test
-        </h1>
+    <div className="space-y-8 p-8 rounded-xl shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <BookOpen className="w-6 h-6 text-primary" />
+          Quiz Assessment
+        </h2>
+        <div className="text-sm text-slate-600">
+          Question {currentQuestionIndex + 1} of {questions.length}
+        </div>
+      </div>
 
-        {quizData?.questions?.map((question, questionIndex) => (
-          <div key={questionIndex} className="mb-6">
-            <h3 className="text-xl font-semibold mb-4">
-              {question.questionText}
+      {!showResults ? (
+        <div className="space-y-6">
+          <div className="p-6 bg-slate-50 rounded-lg">
+            <h3 className="text-xl font-semibold text-slate-800 mb-4">
+              {currentQuestion.question}
             </h3>
             <div className="space-y-3">
-              {question.options.map((option, optionIndex) => (
+              {currentQuestion.options.map((option) => (
                 <button
-                  key={optionIndex}
-                  onClick={() => handleAnswerSelect(questionIndex, optionIndex)}
+                  key={option}
+                  onClick={() => handleAnswerSelect(option)}
                   className={`
-                    w-full text-left p-3 rounded-lg border transition-colors 
+                    w-full text-left p-4 rounded-lg border transition-all
+                    hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary
                     ${
-                      showResults && option.isCorrect
-                        ? "bg-green-100 border-green-300"
-                        : showResults &&
-                          selectedAnswers[questionIndex] === optionIndex &&
-                          !option.isCorrect
-                        ? "bg-red-100 border-red-300"
-                        : selectedAnswers[questionIndex] === optionIndex
-                        ? "bg-blue-100 border-blue-300"
-                        : "bg-white border-gray-200 hover:bg-gray-50"
+                      selectedAnswers[currentQuestionIndex] === option
+                        ? "bg-primary/10 border-primary"
+                        : "bg-white border-slate-200"
                     }
+                    relative pl-12
                   `}
                 >
-                  {option.text}
-                  {showResults && option.isCorrect && (
-                    <CheckCircle2 className="inline ml-2 text-green-600" />
-                  )}
-                  {showResults &&
-                    selectedAnswers[questionIndex] === optionIndex &&
-                    !option.isCorrect && (
-                      <XCircle className="inline ml-2 text-red-600" />
-                    )}
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                    <div
+                      className={`
+                        w-5 h-5 border-2 rounded-full
+                        ${
+                          selectedAnswers[currentQuestionIndex] === option
+                            ? "border-primary bg-primary/10"
+                            : "border-slate-300"
+                        }
+                      `}
+                    />
+                  </div>
+                  {option}
                 </button>
               ))}
             </div>
-            {showResults && (
-              <div className="bg-gray-100 p-4 rounded-lg mt-4">
-                <p className="font-medium">Explanation:</p>
-                <p>{question.explanation}</p>
-              </div>
+          </div>
+
+          <div className="flex justify-between gap-4">
+            <Button
+              onClick={handlePrevQuestion}
+              disabled={currentQuestionIndex === 0}
+              variant="outline"
+              className="w-32"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Previous
+            </Button>
+
+            {currentQuestionIndex === questions.length - 1 ? (
+              <Button
+                onClick={calculateScore}
+                disabled={selectedAnswers.some((answer) => answer === null)}
+                className="w-32"
+              >
+                Submit
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNextQuestion}
+                disabled={currentQuestionIndex === questions.length - 1}
+                className="w-32"
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
             )}
           </div>
-        ))}
 
-        {!showResults && (
-          <Button
-            onClick={calculateScore}
-            disabled={selectedAnswers.some((answer) => answer === null)}
-            className="w-full mt-6"
-          >
-            Submit Quiz
-          </Button>
-        )}
-
-        {showResults && (
-          <div className="text-center space-y-4 mt-6">
-            <h4 className="text-2xl font-bold">
-              Your Score: {score.toFixed(0)}%
-              {score >= quizData.passingScore ? (
-                <span className="text-green-600 ml-2">Passed!</span>
-              ) : (
-                <span className="text-red-600 ml-2">Failed</span>
-              )}
-            </h4>
-            <p className="text-gray-600">
-              Passing Score: {quizData.passingScore}%
-            </p>
-            <div className="flex justify-center gap-4 mt-4">
-              <Button onClick={restartQuiz}>Retake Quiz</Button>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  router.push(
-                    `/roadmap/content?topic=${searchParams.get("topic")}`
-                  )
-                }
-              >
-                Back to Content
-              </Button>
+          <div className="flex justify-center">
+            <div className="flex gap-2">
+              {questions.map((_, index) => (
+                <div
+                  key={index}
+                  className={`
+                    w-3 h-3 rounded-full
+                    ${
+                      selectedAnswers[index] !== null
+                        ? "bg-primary"
+                        : "bg-slate-200"
+                    }
+                    ${
+                      currentQuestionIndex === index
+                        ? "ring-2 ring-primary ring-offset-2"
+                        : ""
+                    }
+                  `}
+                />
+              ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="bg-white p-6 rounded-lg border border-slate-200 space-y-4">
+          <div className="flex items-center justify-center gap-4">
+            <div
+              className={`text-4xl font-bold ${
+                score >= 70 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {score.toFixed(0)}%
+            </div>
+            <div className="text-slate-600">Passing Score: 70%</div>
+          </div>
+          {score >= 70 ? (
+            <Alert className="bg-green-50 border-green-200">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Congratulations! You've passed the quiz!
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert className="bg-red-50 border-red-200">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                You haven't reached the passing score. Please review the
+                material and try again.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-export default QuizPage;
+export default QuizSection;
