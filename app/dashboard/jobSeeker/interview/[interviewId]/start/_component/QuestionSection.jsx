@@ -1,194 +1,18 @@
-// import "regenerator-runtime/runtime";
-// import { Button } from "@/components/ui/button";
-// import { Mic, StopCircle, Volume2 } from "lucide-react";
-// import React, { useState, useEffect } from "react";
-// import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
-// import toast from "react-hot-toast";
-// import { Progress } from "@/components/ui/progress";
-// import axios from "axios";
-// import ConfidenceRecorder from "@/components/ConfidenceRecorder"; // Ensure this is properly imported
-
-// const QuestionSection = ({ interviewData }) => {
-//   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
-//   const [userAnswers, setUserAnswers] = useState([]);
-//   const [isInterviewComplete, setIsInterviewComplete] = useState(false);
-//   const [isSaving, setIsSaving] = useState(false);
-
-//   // State to store confidence model data
-//   const [confidenceData, setConfidenceData] = useState([]);
-//   const [averageConfidence, setAverageConfidence] = useState(0);
-//   const [averagePosture, setAveragePosture] = useState(0);
-//   const [averageEyeContact, setAverageEyeContact] = useState(0);
-
-//   const totalQuestions = interviewData?.jsonMockResp?.length || 0;
-
-//   const {
-//     transcript,
-//     listening,
-//     resetTranscript,
-//     browserSupportsSpeechRecognition,
-//   } = useSpeechRecognition();
-
-//   useEffect(() => {
-//     if (activeQuestionIndex >= totalQuestions && userAnswers.length === totalQuestions) {
-//       setIsInterviewComplete(true);
-//       saveUserAnswer();
-//     }
-//   }, [activeQuestionIndex, totalQuestions, userAnswers]);
-
-//   // Save user answers to backend
-//   const saveUserAnswer = async () => {
-//     if (userAnswers.length === 0) return;
-//     try {
-//       const response = await axios.post(
-//         "http://localhost:3000/api/savingUserAnswer",
-//         {
-//           interviewData,
-//           userAnswers,
-//         }
-//       );
-//       console.log(response.data);
-//       toast.success("Interview data saved successfully");
-//     } catch (error) {
-//       toast.error("Failed to save interview data");
-//     }
-//   };
-
-//   // Record user answer
-//   const recordUserAnswer = () => {
-//     if (isInterviewComplete) {
-//       toast.error("Interview is already complete");
-//       return;
-//     }
-
-//     if (listening) {
-//       SpeechRecognition.stopListening();
-//       setIsSaving(true);
-//       setUserAnswers((prev) => {
-//         const newAnswers = [...prev];
-//         newAnswers[activeQuestionIndex] = transcript;
-//         return newAnswers;
-//       });
-//       setTimeout(() => {
-//         resetTranscript();
-//         setIsSaving(false);
-//         if (activeQuestionIndex < totalQuestions - 1) {
-//           setActiveQuestionIndex((prev) => prev + 1);
-//         } else {
-//           setActiveQuestionIndex((prev) => prev + 1); // This will trigger the useEffect
-//         }
-//       }, 3000);
-//     } else {
-//       SpeechRecognition.startListening({ continuous: true });
-//     }
-//   };
-
-//   // Text-to-speech functionality
-//   const textToSpeech = (text) => {
-//     if ("speechSynthesis" in window) {
-//       const speech = new SpeechSynthesisUtterance(text);
-//       window.speechSynthesis.speak(speech);
-//     } else {
-//       toast.error("Sorry, your browser does not support text to speech");
-//     }
-//   };
-
-//   // Callback for ConfidenceRecorder data
-//   const handleConfidenceData = (data) => {
-//     setConfidenceData((prev) => [...prev, ...data]);
-  
-//     // Calculate averages from all data points
-//     const totalConfidence = data.reduce((acc, item) => acc + item.confidence, 0);
-//     const totalPosture = data.reduce((acc, item) => acc + item.posture_score, 0);
-//     const totalEyeContact = data.reduce((acc, item) => acc + item.eye_contact, 0);
-  
-//     setAverageConfidence((totalConfidence / data.length).toFixed(2));
-//     setAveragePosture((totalPosture / data.length).toFixed(2));
-//     setAverageEyeContact((totalEyeContact / data.length) > 0.5 ? "Yes" : "No");
-//   };
-
-//   if (isInterviewComplete) {
-//     return (
-//       <div className="p-5 border-4 rounded-lg flex flex-col justify-center items-center w-full h-full space-y-4">
-//         <h2 className="text-xl font-semibold mb-4">Interview Complete</h2>
-//         <p>Thank you for completing the interview. Your answers have been saved.</p>
-//         <div className="space-y-2">
-//           <p>Average Confidence: <strong>{averageConfidence}%</strong></p>
-//           <p>Average Posture: <strong>{averagePosture}</strong></p>
-//           <p>Average Eye Contact: <strong>{averageEyeContact}</strong></p>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="flex w-full space-x-4">
-//       {/* Left Section (Question and Answer) */}
-//       <div className="p-5 border-4 rounded-lg flex flex-col justify-between w-[60%] h-[520px]">
-//         <div className="p-3">
-//           <h2 className="pb-1 font-normal">
-//             Question {activeQuestionIndex + 1} / {totalQuestions}
-//           </h2>
-//           <Progress value={((activeQuestionIndex + 1) / totalQuestions) * 100} />
-//         </div>
-//         <div>
-//           <h2 className="px-3 pb-3 font-semibold rounded-md text-md md:text-lg">
-//             {interviewData?.jsonMockResp[activeQuestionIndex]?.question}
-//           </h2>
-//           <div className="w-full text-gray-500 h-[130px] rounded-lg border-2 p-3">
-//             {listening ? transcript : 
-//              isSaving ? "Your answer is being saved..." : 
-//              userAnswers[activeQuestionIndex] || "Record Your Answer..."}
-//           </div>
-//         </div>
-//         <div className="flex items-center mt-2 justify-between w-full">
-//           <Button
-//             onClick={() => textToSpeech(interviewData?.jsonMockResp[activeQuestionIndex]?.question)}
-//             variant="outline"
-//             className="flex items-center justify-center gap-2 cursor-pointer"
-//           >
-//             <Volume2 className="cursor-pointer" />
-//             Read
-//           </Button>
-//           <Button className="w-[170px]" onClick={recordUserAnswer} disabled={isSaving}>
-//             {listening ? (
-//               <h2 className="flex items-center gap-2">
-//                 <StopCircle /> Stop Recording
-//               </h2>
-//             ) : isSaving ? (
-//               <h2 className="flex items-center gap-2">Saving...</h2>
-//             ) : (
-//               <h2 className="flex items-center gap-2">
-//                 <Mic /> Record Answer
-//               </h2>
-//             )}
-//           </Button>
-//         </div>
-//       </div>
-
-//       {/* Right Section (Video and Results) */}
-//       <div className="flex-1">
-//         {/* Confidence Recorder */}
-//         <ConfidenceRecorder onData={handleConfidenceData} />
-
-//         <div className="mt-4 space-y-2">
-
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default QuestionSection;
+"use client";
+import VideoAnalysis from "@/components/VideoAnalysis";
 import "regenerator-runtime/runtime";
 import { Button } from "@/components/ui/button";
 import { Mic, StopCircle, Volume2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 import toast from "react-hot-toast";
 import { Progress } from "@/components/ui/progress";
 import axios from "axios";
 import ConfidenceRecorder from "@/components/ConfidenceRecorder";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 
 const QuestionSection = ({ interviewData }) => {
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
@@ -199,7 +23,7 @@ const QuestionSection = ({ interviewData }) => {
   const [averages, setAverages] = useState({
     confidence: 0,
     posture: 0,
-    eyeContact: 'No'
+    eyeContact: "No",
   });
 
   const totalQuestions = interviewData?.jsonMockResp?.length || 0;
@@ -212,7 +36,10 @@ const QuestionSection = ({ interviewData }) => {
   } = useSpeechRecognition();
 
   useEffect(() => {
-    if (activeQuestionIndex >= totalQuestions && userAnswers.length === totalQuestions) {
+    if (
+      activeQuestionIndex >= totalQuestions &&
+      userAnswers.length === totalQuestions
+    ) {
       setIsInterviewComplete(true);
       calculateFinalAverages();
       saveUserAnswer();
@@ -222,39 +49,40 @@ const QuestionSection = ({ interviewData }) => {
   const calculateFinalAverages = () => {
     if (confidenceResults.length === 0) return;
 
-    const totals = confidenceResults.reduce((acc, result) => ({
-      confidence: acc.confidence + result.confidence,
-      posture: acc.posture + result.posture_score,
-      eyeContact: acc.eyeContact + (result.eye_contact ? 1 : 0)
-    }), { confidence: 0, posture: 0, eyeContact: 0 });
+    const totals = confidenceResults.reduce(
+      (acc, result) => ({
+        confidence: acc.confidence + result.confidence,
+        posture: acc.posture + result.posture_score,
+        eyeContact: acc.eyeContact + (result.eye_contact ? 1 : 0),
+      }),
+      { confidence: 0, posture: 0, eyeContact: 0 }
+    );
 
     setAverages({
       confidence: (totals.confidence / confidenceResults.length).toFixed(2),
       posture: (totals.posture / confidenceResults.length).toFixed(2),
-      eyeContact: (totals.eyeContact / confidenceResults.length > 0.5) ? 'Yes' : 'No'
+      eyeContact:
+        totals.eyeContact / confidenceResults.length > 0.5 ? "Yes" : "No",
     });
   };
 
   const saveUserAnswer = async () => {
     if (userAnswers.length === 0) return;
     try {
-      const response = await axios.post(
-        "/api/savingUserAnswer",
-        {
-          interviewData,
-          userAnswers,
-          confidenceData: {
-            averageConfidence: averages.confidence,
-            averagePosture: averages.posture,
-            averageEyeContact: averages.eyeContact,
-            detailedResults: confidenceResults
-          }
-        }
-      );
-      console.log('Saved interview data:', response.data);
+      const response = await axios.post("/api/savingUserAnswer", {
+        interviewData,
+        userAnswers,
+        confidenceData: {
+          averageConfidence: averages.confidence,
+          averagePosture: averages.posture,
+          averageEyeContact: averages.eyeContact,
+          detailedResults: confidenceResults,
+        },
+      });
+      console.log("Saved interview data:", response.data);
       toast.success("Interview data saved successfully");
     } catch (error) {
-      console.error('Error saving interview data:', error);
+      console.error("Error saving interview data:", error);
       toast.error("Failed to save interview data");
     }
   };
@@ -273,7 +101,7 @@ const QuestionSection = ({ interviewData }) => {
         newAnswers[activeQuestionIndex] = transcript;
         return newAnswers;
       });
-      
+
       setTimeout(() => {
         resetTranscript();
         setIsSaving(false);
@@ -292,18 +120,19 @@ const QuestionSection = ({ interviewData }) => {
     if ("speechSynthesis" in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
+
       const speech = new SpeechSynthesisUtterance(text);
-      
+
       // Optional: Configure speech settings
-      speech.rate = 1.0;  // Speed of speech
+      speech.rate = 1.0; // Speed of speech
       speech.pitch = 1.0; // Pitch of speech
       speech.volume = 1.0; // Volume of speech
-      
+
       // Get available voices and set a natural sounding one if available
       const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(voice => 
-        voice.name.includes('Natural') || voice.name.includes('Premium')
+      const preferredVoice = voices.find(
+        (voice) =>
+          voice.name.includes("Natural") || voice.name.includes("Premium")
       );
       if (preferredVoice) {
         speech.voice = preferredVoice;
@@ -316,7 +145,7 @@ const QuestionSection = ({ interviewData }) => {
   };
 
   const handleConfidenceData = (newData) => {
-    setConfidenceResults(prev => [...prev, newData]);
+    setConfidenceResults((prev) => [...prev, newData]);
   };
 
   if (!browserSupportsSpeechRecognition) {
@@ -336,69 +165,96 @@ const QuestionSection = ({ interviewData }) => {
     return (
       <div className="p-5 border-4 rounded-lg flex flex-col justify-center items-center w-full h-full space-y-4">
         <h2 className="text-xl font-semibold mb-4">Interview Complete</h2>
-        <p>Thank you for completing the interview. Your answers have been saved.</p>
+        <p>
+          Thank you for completing the interview. Your answers have been saved.
+        </p>
         <div className="space-y-2">
-          <p>Average Confidence: <strong>{averages.confidence}%</strong></p>
-          <p>Average Posture: <strong>{averages.posture}</strong></p>
-          <p>Average Eye Contact: <strong>{averages.eyeContact}</strong></p>
+          <p>
+            Average Confidence: <strong>{averages.confidence}%</strong>
+          </p>
+          <p>
+            Average Posture: <strong>{averages.posture}</strong>
+          </p>
+          <p>
+            Average Eye Contact: <strong>{averages.eyeContact}</strong>
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex w-full space-x-4">
+    <div className="flex w-full gap-6 h-[600px]">
       {/* Left Section (Question and Answer) */}
-      <div className="p-5 border-4 rounded-lg flex flex-col justify-between w-[60%] h-[520px]">
-        <div className="p-3">
-          <h2 className="pb-1 font-normal">
-            Question {activeQuestionIndex + 1} / {totalQuestions}
-          </h2>
-          <Progress value={((activeQuestionIndex + 1) / totalQuestions) * 100} />
-        </div>
-        <div>
-          <h2 className="px-3 pb-3 font-semibold rounded-md text-md md:text-lg">
-            {interviewData?.jsonMockResp[activeQuestionIndex]?.question}
-          </h2>
-          <div className="w-full text-gray-500 h-[130px] rounded-lg border-2 p-3">
-            {listening ? transcript : 
-             isSaving ? "Your answer is being saved..." : 
-             userAnswers[activeQuestionIndex] || "Record Your Answer..."}
+      <Card className="w-[45%] flex flex-col">
+        <CardContent className="p-6 flex flex-col h-full gap-4">
+          <div className="bg-muted rounded-lg p-4">
+            <h2 className="text-foreground font-medium mb-3">
+              Question {activeQuestionIndex + 1} / {totalQuestions}
+            </h2>
+            <Progress value={((activeQuestionIndex + 1) / totalQuestions) * 100} className="h-2" />
           </div>
-        </div>
-        <div className="flex items-center mt-2 justify-between w-full">
-          <Button
-            onClick={() => textToSpeech(interviewData?.jsonMockResp[activeQuestionIndex]?.question)}
-            variant="outline"
-            className="flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Volume2 className="cursor-pointer" />
-            Read
-          </Button>
-          <Button 
-            className="w-[170px]" 
-            onClick={recordUserAnswer} 
-            disabled={isSaving}
-          >
-            {listening ? (
-              <h2 className="flex items-center gap-2">
-                <StopCircle /> Stop Recording
-              </h2>
-            ) : isSaving ? (
-              <h2 className="flex items-center gap-2">Saving...</h2>
-            ) : (
-              <h2 className="flex items-center gap-2">
-                <Mic /> Record Answer
-              </h2>
-            )}
-          </Button>
-        </div>
-      </div>
 
-      {/* Right Section (Confidence Analysis) */}
-      <div className="flex-1">
-        <ConfidenceRecorder onData={handleConfidenceData} />
-      </div>
+          <div className="flex-grow flex flex-col gap-4">
+            <div className="px-5 py-4 font-medium rounded-lg bg-muted text-foreground text-lg">
+              {interviewData?.jsonMockResp[activeQuestionIndex]?.question}
+            </div>
+
+            <div className="flex-grow w-full rounded-lg border p-5 bg-muted text-foreground">
+              {listening ? (
+                <div className="animate-fade-in">{transcript}</div>
+              ) : isSaving ? (
+                <div className="text-muted-foreground animate-pulse">Your answer is being saved...</div>
+              ) : (
+                <div className={`${userAnswers[activeQuestionIndex] ? "" : "text-muted-foreground"}`}>
+                  {userAnswers[activeQuestionIndex] || "Record Your Answer..."}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between w-full">
+            <Button
+              onClick={() => textToSpeech(interviewData?.jsonMockResp[activeQuestionIndex]?.question)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Volume2 className="w-4 h-4" />
+              <span>Read</span>
+            </Button>
+
+            <Button
+              className={`w-[140px] ${listening ? "bg-destructive hover:bg-destructive/90" : ""}`}
+              onClick={recordUserAnswer}
+              disabled={isSaving}
+            >
+              {listening ? (
+                <span className="flex items-center gap-2">
+                  <StopCircle className="w-4 h-4 animate-pulse" />
+                  Stop
+                </span>
+              ) : isSaving ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Mic className="w-4 h-4" />
+                  Record
+                </span>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Right Section (Video Analysis) */}
+      <Card className="flex-1">
+        <CardContent className="p-6">
+          <ConfidenceRecorder onData={handleConfidenceData} />
+        </CardContent>
+      </Card>
     </div>
   );
 };

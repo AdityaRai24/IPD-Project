@@ -5,7 +5,10 @@ import numpy as np
 from deepface import DeepFace
 import mediapipe as mp
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize MediaPipe modules for face and pose estimation
@@ -19,24 +22,57 @@ def analyze_emotion(frame):
     try:
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = DeepFace.analyze(frame_rgb, actions=['emotion'], enforce_detection=False)
-        # DeepFace returns a list; we extract the first analysis result.
+        # DeepFace returns a list; we extract the first analysis result
         emotion = result[0]['dominant_emotion']
-        confidence = result[0]['emotion'][emotion]
-        return emotion, confidence
+        # Ensure confidence is between 0 and 100
+        confidence = min(100.0, result[0]['emotion'][emotion])
+        return emotion, confidence / 100  # Convert to decimal (0-1 range)
     except Exception as e:
         print(f"DeepFace error: {e}")
         return None, 0
 
 def calculate_eye_contact(face_landmarks):
-    """A simple heuristic to calculate eye contact based on landmarks."""
-    # Using indices for left and right eyes (you can adjust these as needed)
-    left_eye_idx = [33, 133]
-    right_eye_idx = [362, 263]
-    left_eye = np.array([face_landmarks.landmark[i].x for i in left_eye_idx])
-    right_eye = np.array([face_landmarks.landmark[i].x for i in right_eye_idx])
-    eye_distance = np.abs(left_eye.mean() - right_eye.mean())
-    # If the horizontal distance between eyes is very small, we assume eye contact
-    return 1 if eye_distance < 0.02 else 0
+    """
+    Enhanced eye contact detection using multiple facial landmarks
+    Returns a boolean indicating whether eye contact is detected
+    """
+    # Define key landmark indices for eyes
+    LEFT_EYE_INDICES = [33, 133, 157, 158, 159, 160, 161, 173, 246]  # Left eye landmarks
+    RIGHT_EYE_INDICES = [362, 263, 384, 385, 386, 387, 388, 398, 466]  # Right eye landmarks
+    
+    # Get eye landmarks
+    left_eye_points = np.array([[face_landmarks.landmark[idx].x, 
+                               face_landmarks.landmark[idx].y, 
+                               face_landmarks.landmark[idx].z] for idx in LEFT_EYE_INDICES])
+    right_eye_points = np.array([[face_landmarks.landmark[idx].x, 
+                                face_landmarks.landmark[idx].y, 
+                                face_landmarks.landmark[idx].z] for idx in RIGHT_EYE_INDICES])
+    
+    # Calculate eye centers
+    left_eye_center = left_eye_points.mean(axis=0)
+    right_eye_center = right_eye_points.mean(axis=0)
+    
+    # Calculate face direction using nose tip (landmark 1)
+    nose_tip = np.array([face_landmarks.landmark[1].x,
+                        face_landmarks.landmark[1].y,
+                        face_landmarks.landmark[1].z])
+    
+    # Calculate the vertical tilt of the face
+    vertical_tilt = abs(nose_tip[1] - (left_eye_center[1] + right_eye_center[1]) / 2)
+    
+    # Calculate horizontal angle of the face
+    eye_distance = np.linalg.norm(left_eye_center - right_eye_center)
+    horizontal_angle = abs(left_eye_center[2] - right_eye_center[2]) / eye_distance
+    
+    # Thresholds for determining eye contact
+    VERTICAL_THRESHOLD = 0.15  # Adjusted threshold for vertical tilt
+    HORIZONTAL_THRESHOLD = 0.1  # Adjusted threshold for horizontal angle
+    
+    # Check if both vertical and horizontal angles are within acceptable ranges
+    is_looking_forward = (vertical_tilt < VERTICAL_THRESHOLD and 
+                         horizontal_angle < HORIZONTAL_THRESHOLD)
+    
+    return 1 if is_looking_forward else 0
 
 def calculate_angle(a, b, c):
     """Calculate the angle (in degrees) between the vectors BA and BC."""
@@ -104,7 +140,7 @@ def handle_frame(data):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return "Server is running!"
 
 # ---------------- Main ---------------- #
 
