@@ -1,12 +1,15 @@
 "use client";
-import { StepForward, BookOpen, Lock } from "lucide-react";
+import { StepForward, BookOpen, Lock, CheckCircle, Circle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const LeftNavbar = () => {
   const [roadmap, setRoadmap] = useState([]);
   const router = useRouter();
-  const topic = useSearchParams().get("topic");
+  const searchParams = useSearchParams();
+  const topic = searchParams.get("topic");
+  const currentSectionIdx = parseInt(searchParams.get("sectionIdx") || searchParams.get("section") || "0");
+  const currentLevelId = parseInt(searchParams.get("levelId") || searchParams.get("level") || "1");
 
   useEffect(() => {
     const content = JSON.parse(localStorage.getItem("roadmap"));
@@ -20,22 +23,15 @@ const LeftNavbar = () => {
     return previousSection?.levels.every((level) => level.completed) || false;
   };
 
-  const isLevelAccessible = (sectionIndex, levelIndex) => {
-    // First check if the section is unlocked
-    if (!isSectionUnlocked(sectionIndex)) return false;
-    
-    // If it's the first level in a section, it's accessible
-    if (levelIndex === 0) return true;
-    
-    // Otherwise, check if previous level is completed
+  const isSectionCompleted = (sectionIndex) => {
     const section = roadmap[sectionIndex];
-    return section.levels[levelIndex - 1].completed || false;
+    return section?.levels.every((level) => level.completed) || false;
   };
 
   const handleNavigation = (levelItem, sectionIndex, levelIndex) => {
-    if (isLevelAccessible(sectionIndex, levelIndex)) {
+    if (isSectionUnlocked(sectionIndex)) {
       router.push(
-        `/roadmap/content?topic=${levelItem.description}&section=${sectionIndex}&level=${levelIndex+1}`
+        `/roadmap/content?topic=${levelItem.description}&sectionIdx=${sectionIndex}&levelId=${levelItem.level || levelIndex+1}`
       );
     }
   };
@@ -48,59 +44,78 @@ const LeftNavbar = () => {
       </div>
       
       <div className="space-y-2 p-2">
-        {roadmap?.map((item, index) => (
-          <div
-            key={index}
-            className={`bg-white rounded-lg p-4 transition-colors ${
-              isSectionUnlocked(index) ? "hover:bg-gray-50" : "opacity-75"
-            }`}
-          >
-            <div className="mb-2">
-              <p className="text-sm font-medium text-pink-600">
-                UNIT {index + 1}
-              </p>
-              <h2 className="font-bold text-lg text-gray-900">{item.name}</h2>
+        {roadmap?.map((item, sectionIndex) => {
+          const isUnlocked = isSectionUnlocked(sectionIndex);
+          const isCompleted = isSectionCompleted(sectionIndex);
+          
+          return (
+            <div
+              key={sectionIndex}
+              className={`bg-white rounded-lg p-4 transition-colors ${
+                isUnlocked ? "hover:bg-gray-50" : "opacity-75"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-sm font-medium text-pink-600">
+                    UNIT {sectionIndex + 1}
+                  </p>
+                  <h2 className="font-bold text-lg text-gray-900">{item.name}</h2>
+                </div>
+                {isCompleted && (
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                )}
+                {!isUnlocked && (
+                  <Lock size={16} className="text-gray-400" />
+                )}
+              </div>
+              
+              <div className="space-y-2 ml-2">
+                {item.levels.map((levelItem, levelIndex) => {
+                  const isCurrentTopic = topic === levelItem.description;
+                  const isCompleted = levelItem.completed;
+                  
+                  return (
+                    <div
+                      key={levelIndex}
+                      onClick={() => isUnlocked && handleNavigation(levelItem, sectionIndex, levelIndex)}
+                      className={`flex items-center gap-2 p-2 rounded-md transition-all ${
+                        !isUnlocked 
+                          ? "cursor-not-allowed text-gray-400" 
+                          : isCurrentTopic
+                            ? "bg-blue-50 text-blue-700 cursor-pointer"
+                            : "hover:bg-gray-100 cursor-pointer text-gray-600"
+                      }`}
+                    >
+                      {!isUnlocked ? (
+                        <Lock size={16} className="text-gray-400" />
+                      ) : isCompleted ? (
+                        <CheckCircle size={16} className="text-green-500" />
+                      ) : (
+                        <Circle size={16} className={
+                          isCurrentTopic
+                            ? "text-blue-700"
+                            : "text-gray-400"
+                        } />
+                      )}
+                      <p className={`text-sm ${
+                        !isUnlocked
+                          ? "text-gray-400"
+                          : isCurrentTopic
+                            ? "font-medium text-blue-700"
+                            : isCompleted
+                              ? "text-green-600"
+                              : "text-gray-600"
+                      }`}>
+                        {levelItem.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            
-            <div className="space-y-2 ml-2">
-              {item.levels.map((levelItem, levelIndex) => {
-                const isAccessible = isLevelAccessible(index, levelIndex);
-                return (
-                  <div
-                    key={levelIndex}
-                    onClick={() => handleNavigation(levelItem, index, levelIndex)}
-                    className={`flex items-center gap-2 p-2 rounded-md transition-all ${
-                      !isAccessible 
-                        ? "cursor-not-allowed text-gray-400" 
-                        : topic === levelItem.description
-                          ? "bg-blue-50 text-blue-700 cursor-pointer"
-                          : "hover:bg-gray-100 cursor-pointer text-gray-600"
-                    }`}
-                  >
-                    {!isAccessible ? (
-                      <Lock size={16} className="text-gray-400" />
-                    ) : (
-                      <StepForward size={16} className={
-                        topic === levelItem.description
-                          ? "text-blue-700"
-                          : "text-gray-400"
-                      } />
-                    )}
-                    <p className={`text-sm ${
-                      !isAccessible
-                        ? "text-gray-400"
-                        : topic === levelItem.description
-                          ? "font-medium text-blue-700"
-                          : "text-gray-600"
-                    }`}>
-                      {levelItem.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

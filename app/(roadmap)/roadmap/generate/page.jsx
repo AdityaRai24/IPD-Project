@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import QuestionSection from "@/app/dashboard/jobSeeker/interview/[interviewId]/start/_component/QuestionSection";
 
 const RoadmapPage = () => {
   const router = useRouter();
@@ -165,7 +166,7 @@ const RoadmapPage = () => {
   const renderSidebar = () => {
     return (
       <div className="w-80 bg-gray-50 min-h-screen border-r border-gray-200 fixed left-0 top-0">
-        <div className="p-8">
+        <div className="p-8 mt-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             Learning Path
           </h2>
@@ -220,6 +221,7 @@ const RoadmapPage = () => {
 
     return (
       <Card
+      key={levelId}
         className={`overflow-hidden transition-all duration-200 ${
           isCompleted
             ? "bg-green-50/50 border-green-100"

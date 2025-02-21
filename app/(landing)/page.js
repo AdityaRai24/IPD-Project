@@ -15,7 +15,7 @@ export default function Home() {
  
 
   return (
-    <div className="min-h-screen bg-pink-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-pink-50 px-4 py-12 sm:px-6 mt-24 lg:px-8">
       <main className="mx-auto max-w-7xl">
         <div className="text-center">
           <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
