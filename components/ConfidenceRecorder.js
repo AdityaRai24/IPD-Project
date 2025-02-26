@@ -2,14 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { StopCircle, Camera, Cloud, Cpu } from "lucide-react";
+import { StopCircle, Camera } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { io } from "socket.io-client";
 
 const ConfidenceRecorder = ({ onData }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [videoStream, setVideoStream] = useState(null);
-  const [isLocalModel, setIsLocalModel] = useState(false);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const socketRef = useRef(null);
 
@@ -26,20 +25,36 @@ const ConfidenceRecorder = ({ onData }) => {
 
   // Initialize Socket Connection
   const initializeSocket = () => {
-    socketRef.current = io("http://127.0.0.1:5000");
-    socketRef.current.on("analysis_result", (data) => {
-      const newData = {
-        emotion: data.emotion || "neutral",
-        confidence: (data.confidence || 0) * 100,
-        eye_contact: data.eye_contact ? 1 : 0,
-        posture_score: data.posture_score || 50,
-      };
-      setConfidenceData(newData);
-      onData(newData);
-    });
+    try {
+      setIsLoadingModels(true);
+      socketRef.current = io("http://127.0.0.1:5000");
+      socketRef.current.on("connect", () => {
+        toast.success("Connected to analysis server");
+        setIsLoadingModels(false);
+      });
+      socketRef.current.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+        toast.error("Failed to connect to analysis server. Please check if the server is running.");
+        setIsLoadingModels(false);
+      });
+      socketRef.current.on("analysis_result", (data) => {
+        const newData = {
+          emotion: data.emotion || "neutral",
+          confidence: (data.confidence || 0) * 100,
+          eye_contact: data.eye_contact ? 1 : 0,
+          posture_score: data.posture_score || 50,
+        };
+        setConfidenceData(newData);
+        onData(newData);
+      });
+    } catch (error) {
+      console.error("Socket initialization error:", error);
+      toast.error("Failed to initialize analysis");
+      setIsLoadingModels(false);
+    }
   };
 
-  // Local Frame Analysis Method
+  // Frame Analysis Method
   const captureAndSendFrame = async () => {
     if (!videoRef.current || !socketRef.current) return;
 
@@ -62,94 +77,14 @@ const ConfidenceRecorder = ({ onData }) => {
     }, "image/jpeg");
   };
 
-  // Cloud Analysis Method (Unchanged)
-  const analyzeAPICall = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    try {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      ctx.drawImage(videoRef.current, 0, 0);
-
-      const base64Frame = canvas.toDataURL("image/jpeg", 0.8);
-
-      const response = await fetch("/api/emotion", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64Frame }),
-      });
-
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-
-      const data = await response.json();
-
-      if (data.error) {
-        console.warn("API warning:", data.error);
-        return;
-      }
-
-      if (data.emotions) {
-        const confidence =
-          (data.emotions.happiness +
-            data.emotions.neutral +
-            data.emotions.surprise) /
-          3;
-
-        const newData = {
-          emotion: Object.entries(data.emotions).reduce((a, b) =>
-            a[1] > b[1] ? a : b
-          )[0],
-          confidence: confidence,
-          eye_contact:
-            data.emotions.neutral > 30 || data.emotions.happiness > 30 ? 1 : 0,
-          posture_score: Math.min(
-            100,
-            50 + (data.emotions.neutral + data.emotions.happiness) / 3
-          ),
-        };
-
-        setConfidenceData(newData);
-        onData(newData);
-      }
-    } catch (error) {
-      console.error("Error in API analysis:", error);
-      toast.error("Cloud analysis failed. Consider switching to local model.");
-    }
-  };
-
-  // Toggle Analysis Mode
-  const toggleAnalysisMode = async () => {
-    if (isRecording) {
-      stopRecording();
-    }
-
-    const newLocalModelState = !isLocalModel;
-    setIsLocalModel(newLocalModelState);
-
-    if (newLocalModelState) {
-      setIsLoadingModels(true);
-      try {
-        initializeSocket();
-        toast.success("Local analysis mode initialized");
-      } catch (error) {
-        console.error("Socket initialization error:", error);
-        toast.error("Failed to initialize local analysis");
-        setIsLocalModel(false);
-      }
-      setIsLoadingModels(false);
-    } else {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    }
-  };
-
   // Start Recording Method
   const startRecording = async () => {
     try {
+      // Initialize socket if not already done
+      if (!socketRef.current) {
+        initializeSocket();
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: 640,
@@ -165,14 +100,9 @@ const ConfidenceRecorder = ({ onData }) => {
       setVideoStream(stream);
       setIsRecording(true);
 
-      analyzeIntervalRef.current = setInterval(
-        () => (isLocalModel ? captureAndSendFrame() : analyzeAPICall()),
-        1000
-      );
+      analyzeIntervalRef.current = setInterval(captureAndSendFrame, 1000);
 
-      toast.success(
-        `Recording started using ${isLocalModel ? "local" : "cloud"} analysis`
-      );
+      toast.success("Recording started");
     } catch (error) {
       console.error("Recording error:", error);
       toast.error("Camera access denied. Please check permissions.");
@@ -194,8 +124,11 @@ const ConfidenceRecorder = ({ onData }) => {
     toast.success("Recording stopped");
   };
 
-  // Cleanup on Unmount
+  // Initialize socket on component mount
   useEffect(() => {
+    initializeSocket();
+    
+    // Cleanup on Unmount
     return () => {
       if (videoStream) {
         videoStream.getTracks().forEach((track) => track.stop());
@@ -212,28 +145,9 @@ const ConfidenceRecorder = ({ onData }) => {
   return (
     <Card className="w-full border-0 shadow-lg rounded-2xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b border-blue-100">
-        <CardTitle className="text-xl font-bold text-gray-800 flex items-center justify-between">
-          <div className="flex items-center">
-            <Camera className="mr-3 text-blue-600 w-6 h-6" />
-            Confidence Analysis
-          </div>
-          <Button
-            onClick={toggleAnalysisMode}
-            variant="outline"
-            className="ml-2 bg-white hover:bg-gray-50"
-            disabled={isRecording || isLoadingModels}
-          >
-            {isLocalModel ? (
-              <Cloud className="w-5 h-5 mr-2" />
-            ) : (
-              <Cpu className="w-5 h-5 mr-2" />
-            )}
-            {isLoadingModels
-              ? "Loading Models..."
-              : isLocalModel
-              ? "Switch to Cloud"
-              : "Switch to Local"}
-          </Button>
+        <CardTitle className="text-xl font-bold text-gray-800 flex items-center">
+          <Camera className="mr-3 text-blue-600 w-6 h-6" />
+          Confidence Analysis
         </CardTitle>
       </CardHeader>
 
@@ -263,7 +177,7 @@ const ConfidenceRecorder = ({ onData }) => {
               <StopCircle className="mr-2 w-5 h-5" /> Stop Recording
             </>
           ) : isLoadingModels ? (
-            "Loading Models..."
+            "Connecting to Analysis Server..."
           ) : (
             "Start Confidence Analysis"
           )}

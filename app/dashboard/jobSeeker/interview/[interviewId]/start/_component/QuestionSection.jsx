@@ -10,9 +10,9 @@ import SpeechRecognition, {
 import toast from "react-hot-toast";
 import { Progress } from "@/components/ui/progress";
 import axios from "axios";
+import ConfidenceAnalysisSummary from "@/components/ConfidenceAnalysisSummary";
 import ConfidenceRecorder from "@/components/ConfidenceRecorder";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 
 const QuestionSection = ({ interviewData }) => {
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
@@ -163,22 +163,18 @@ const QuestionSection = ({ interviewData }) => {
 
   if (isInterviewComplete) {
     return (
-      <div className="p-5 border-4 rounded-lg flex flex-col justify-center items-center w-full h-full space-y-4">
-        <h2 className="text-xl font-semibold mb-4">Interview Complete</h2>
-        <p>
-          Thank you for completing the interview. Your answers have been saved.
+      <div className="w-full space-y-4">
+        <h2 className="text-xl font-semibold">Interview Complete</h2>
+        <p className="mb-6">
+          Thank you for completing the interview. Here's your personalized
+          analysis:
         </p>
-        <div className="space-y-2">
-          <p>
-            Average Confidence: <strong>{averages.confidence}%</strong>
-          </p>
-          <p>
-            Average Posture: <strong>{averages.posture}</strong>
-          </p>
-          <p>
-            Average Eye Contact: <strong>{averages.eyeContact}</strong>
-          </p>
-        </div>
+
+        <ConfidenceAnalysisSummary
+          confidenceResults={confidenceResults}
+          averages={averages}
+          userAnswers={userAnswers}
+        />
       </div>
     );
   }
@@ -192,7 +188,10 @@ const QuestionSection = ({ interviewData }) => {
             <h2 className="text-foreground font-medium mb-3">
               Question {activeQuestionIndex + 1} / {totalQuestions}
             </h2>
-            <Progress value={((activeQuestionIndex + 1) / totalQuestions) * 100} className="h-2" />
+            <Progress
+              value={((activeQuestionIndex + 1) / totalQuestions) * 100}
+              className="h-2"
+            />
           </div>
 
           <div className="flex-grow flex flex-col gap-4">
@@ -204,9 +203,17 @@ const QuestionSection = ({ interviewData }) => {
               {listening ? (
                 <div className="animate-fade-in">{transcript}</div>
               ) : isSaving ? (
-                <div className="text-muted-foreground animate-pulse">Your answer is being saved...</div>
+                <div className="text-muted-foreground animate-pulse">
+                  Your answer is being saved...
+                </div>
               ) : (
-                <div className={`${userAnswers[activeQuestionIndex] ? "" : "text-muted-foreground"}`}>
+                <div
+                  className={`${
+                    userAnswers[activeQuestionIndex]
+                      ? ""
+                      : "text-muted-foreground"
+                  }`}
+                >
                   {userAnswers[activeQuestionIndex] || "Record Your Answer..."}
                 </div>
               )}
@@ -215,7 +222,11 @@ const QuestionSection = ({ interviewData }) => {
 
           <div className="flex items-center justify-between w-full">
             <Button
-              onClick={() => textToSpeech(interviewData?.jsonMockResp[activeQuestionIndex]?.question)}
+              onClick={() =>
+                textToSpeech(
+                  interviewData?.jsonMockResp[activeQuestionIndex]?.question
+                )
+              }
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -224,7 +235,9 @@ const QuestionSection = ({ interviewData }) => {
             </Button>
 
             <Button
-              className={`w-[140px] ${listening ? "bg-destructive hover:bg-destructive/90" : ""}`}
+              className={`w-[140px] ${
+                listening ? "bg-destructive hover:bg-destructive/90" : ""
+              }`}
               onClick={recordUserAnswer}
               disabled={isSaving}
             >
