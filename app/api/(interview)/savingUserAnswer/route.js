@@ -76,7 +76,7 @@ export async function POST(req,res) {
         { status: 400 }
       );
     }
-
+    // console.log(interviewData.jsonMockResp);
     // Construct detailed feedback prompt
     const feedbackPrompt = `You are an expert interviewer providing detailed technical interview feedback. 
 
@@ -142,6 +142,7 @@ IMPORTANT:
       // Create database record
       const databaseResponse = await prisma.UserAnswer.create({
         data: {
+          interviewData:interviewData.jsonMockResp,
           interviewId: interviewData.id,
           feedbackArray: parsedFeedbackArray,
         }

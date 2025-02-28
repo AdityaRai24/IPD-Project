@@ -79,6 +79,7 @@ const QuestionSection = ({ interviewData }) => {
           detailedResults: confidenceResults,
         },
       });
+      console.log(interviewData.jsonMockResp)
       console.log("Saved interview data:", response.data);
       toast.success("Interview data saved successfully");
     } catch (error) {
@@ -171,6 +172,7 @@ const QuestionSection = ({ interviewData }) => {
         </p>
 
         <ConfidenceAnalysisSummary
+         
           confidenceResults={confidenceResults}
           averages={averages}
           userAnswers={userAnswers}

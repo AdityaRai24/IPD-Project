@@ -77,6 +77,7 @@ const RecordAnswer = ({
           }
         );
         console.log(response.data);
+        console.log("question section");
         // if(response){
         //   toast('User Answer recorded successfully');
         // }

@@ -24,12 +24,17 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { Button } from "./ui/button";
+import InterviewSolution from "./InterviewSolution";
+import { useRouter } from "next/navigation";
 
 const ConfidenceAnalysisSummary = ({
   confidenceResults,
   averages,
   userAnswers,
 }) => {
+  const router = useRouter();
+
   const [expandedSections, setExpandedSections] = useState({ tips: false });
 
   // Transform confidence results for time-series visualization
@@ -151,6 +156,16 @@ const ConfidenceAnalysisSummary = ({
       ...expandedSections,
       [section]: !expandedSections[section],
     });
+  };
+
+  const handleInterviewAnalysis = () => {
+    return (
+      <>
+       
+        <h1>hellp</h1>
+        <InterviewSolution />
+      </>
+    );
   };
 
   return (
@@ -435,6 +450,9 @@ const ConfidenceAnalysisSummary = ({
           </Tabs>
         </CardContent>
       </Card>
+       <Button onClick={()=>router.push(`/roadmap/interviewSolution`)}>Interview Analysis</Button>
+     
+
     </div>
   );
 };
