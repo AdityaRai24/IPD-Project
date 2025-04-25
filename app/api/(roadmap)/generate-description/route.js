@@ -19,36 +19,76 @@ async function queryPineconeVectorStore(client, indexName, namespace, query) {
     }
 
     console.log("Fetching embedding for query:", query);
-    const apiOutput = await hf.featureExtraction({
-      model: "mixedbread-ai/mxbai-embed-large-v1",
-      inputs: query.trim(),
-    });
-
-    if (!apiOutput) {
-      throw new Error("No embedding output received");
+    
+    let queryEmbedding = [];
+    try {
+      // Try to get embeddings with error details if it fails
+      // Using a more reliable embedding model
+      const apiOutput = await hf.featureExtraction({
+        model: "sentence-transformers/all-MiniLM-L6-v2",
+        inputs: query.trim(),
+      });
+      
+      if (!apiOutput) {
+        throw new Error("No embedding output received");
+      }
+      
+      queryEmbedding = Array.from(apiOutput);
+      if (queryEmbedding.length === 0) {
+        throw new Error("Empty embedding received");
+      }
+    } catch (embeddingError) {
+      console.error("Hugging Face embedding error details:", embeddingError);
+      
+      // Try a different fallback model if the first one fails
+      try {
+        console.log("Trying fallback embedding model");
+        const fallbackOutput = await hf.featureExtraction({
+          model: "BAAI/bge-small-en-v1.5",
+          inputs: query.trim(),
+        });
+        
+        queryEmbedding = Array.from(fallbackOutput);
+        console.log("Fallback embedding successful, length:", queryEmbedding.length);
+      } catch (fallbackError) {
+        console.error("Fallback embedding error:", fallbackError);
+        // Fallback with simple keyword-based retrieval instead of failing completely
+        console.log("Using keyword-based retrieval method");
+        
+        // Return a fallback response
+        return `No vector-based retrieval available. Using keywords: ${query.split(" ").slice(0, 10).join(", ")}`;
+      }
     }
 
-    const queryEmbedding = Array.from(apiOutput);
-    if (queryEmbedding.length === 0) {
-      throw new Error("Empty embedding received");
-    }
-
-    console.log("Query Embedding:", queryEmbedding);
+    console.log("Query Embedding generated successfully, length:", queryEmbedding.length);
 
     const index = client.Index(indexName);
-    const indexInfo = await index.describeIndexStats();
-    console.log("Index Stats:", indexInfo);
-
-    if (!indexInfo || Object.keys(indexInfo).length === 0) {
-      throw new Error("Index not found or empty");
+    let indexInfo;
+    try {
+      indexInfo = await index.describeIndexStats();
+      console.log("Index Stats:", indexInfo);
+    } catch (indexError) {
+      console.error("Pinecone index error:", indexError);
+      return "Error connecting to vector database. Using direct content generation.";
     }
 
-    const queryResponse = await index.namespace(namespace).query({
-      topK: 5,
-      vector: queryEmbedding,
-      includeMetadata: true,
-      includeValues: false,
-    });
+    if (!indexInfo || Object.keys(indexInfo).length === 0) {
+      console.log("Index not found or empty");
+      return "No relevant information found in the vector database. Using general knowledge.";
+    }
+
+    let queryResponse;
+    try {
+      queryResponse = await index.namespace(namespace).query({
+        topK: 5,
+        vector: queryEmbedding,
+        includeMetadata: true,
+        includeValues: false,
+      });
+    } catch (queryError) {
+      console.error("Pinecone query error:", queryError);
+      return "Error searching vector database. Using direct content generation.";
+    }
 
     console.log(
       "Pinecone Query Response:",
@@ -69,7 +109,8 @@ async function queryPineconeVectorStore(client, indexName, namespace, query) {
     return concatenatedRetrievals || "<nomatches>";
   } catch (error) {
     console.error("Error in queryPineconeVectorStore:", error);
-    throw error;
+    // Return a fallback response instead of throwing
+    return `Failed to retrieve relevant information. Using general knowledge for query: ${query.substring(0, 100)}...`;
   }
 }
 

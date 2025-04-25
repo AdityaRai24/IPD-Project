@@ -25,7 +25,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import InterviewSolution from "./InterviewSolution";
+import InterviewSolution from "@/app/(roadmap)/roadmap/interviewSolution/page";
 import { useRouter } from "next/navigation";
 
 const ConfidenceAnalysisSummary = ({

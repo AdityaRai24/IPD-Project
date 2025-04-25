@@ -127,7 +127,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import axios from "axios";
 
-const page = () => {
+const InterviewSolution = () => {
   const [interviewData, setInterviewData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -282,4 +282,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default InterviewSolution;
