@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,8 +17,6 @@ import {
   AlertCircle,
   CheckCircle,
   Eye,
-  Smile,
-  Frown,
   Video,
   Lightbulb,
   ChevronDown,
@@ -26,7 +24,8 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import InterviewSolution from "@/app/(roadmap)/roadmap/interviewSolution/page";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 
 const ConfidenceAnalysisSummary = ({
   confidenceResults,
@@ -34,8 +33,70 @@ const ConfidenceAnalysisSummary = ({
   userAnswers,
 }) => {
   const router = useRouter();
+  const params = useParams();
+  const [interviewData, setInterviewData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [expandedSections, setExpandedSections] = useState({ tips: false });
+  const [expandedSections, setExpandedSections] = useState({ 
+    tips: false,
+  });
+
+  useEffect(() => {
+    const fetchInterviewData = async () => {
+      try {
+        if (params?.interviewId) {
+          console.log("Fetching interview data for ID:", params.interviewId);
+          
+          const response = await fetch(`/api/user-answer/${params.interviewId}`);
+          console.log("API Response status:", response.status);
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Error response data:", errorData);
+            throw new Error(`Failed to fetch interview data: ${errorData.error || response.statusText}`);
+          }
+          
+          const data = await response.json();
+          console.log("Interview data received:", data);
+          
+          if (!data || !data.interviewData) {
+            console.warn("Interview data is missing or invalid:", data);
+            setError("The interview data is missing or in an unexpected format.");
+          } else {
+            setInterviewData(data);
+            toast.success("Interview data loaded successfully");
+          }
+        } else {
+          console.warn("No interviewId in params:", params);
+          setError("No interview ID provided");
+        }
+      } catch (error) {
+        console.error("Error fetching interview data:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // If userAnswers are directly provided, use them instead of fetching
+    if (userAnswers && userAnswers.length > 0) {
+      console.log("Using provided user answers:", userAnswers);
+      setInterviewData({
+        interviewData: userAnswers.map((answer, index) => ({
+          question: confidenceResults[index]?.question || `Question ${index + 1}`,
+          answer: answer
+        })),
+        feedbackArray: userAnswers.map((_, index) => ({
+          answerRating: 0,
+          questionFeedback: "Feedback pending..."
+        }))
+      });
+      setLoading(false);
+    } else {
+      fetchInterviewData();
+    }
+  }, [params?.interviewId, userAnswers, confidenceResults]);
 
   // Transform confidence results for time-series visualization
   const timeSeriesData = confidenceResults.map((result, index) => ({
@@ -93,32 +154,6 @@ const ConfidenceAnalysisSummary = ({
       });
     }
 
-    // Emotion tips based on most common emotion (would need to be calculated from results)
-    const emotions = confidenceResults.map((r) => r.emotion);
-    const mostCommonEmotion = emotions
-      .sort(
-        (a, b) =>
-          emotions.filter((v) => v === a).length -
-          emotions.filter((v) => v === b).length
-      )
-      .pop();
-
-    if (mostCommonEmotion === "nervous" || mostCommonEmotion === "fear") {
-      tips.push({
-        category: "Emotional Expression",
-        issue: "Anxiety or nervousness detected",
-        tip: "Practice deep breathing exercises before and during interviews. Try 4-7-8 breathing: inhale for 4 seconds, hold for 7, exhale for 8.",
-        severity: "high",
-      });
-    } else if (mostCommonEmotion === "neutral") {
-      tips.push({
-        category: "Emotional Expression",
-        issue: "Limited emotional expressiveness",
-        tip: "Practice varying your vocal tone and facial expressions. Record yourself and identify moments to add emphasis.",
-        severity: "medium",
-      });
-    }
-
     return tips;
   };
 
@@ -159,13 +194,17 @@ const ConfidenceAnalysisSummary = ({
   };
 
   const handleInterviewAnalysis = () => {
-    return (
-      <>
-       
-        <h1>hellp</h1>
-        <InterviewSolution />
-      </>
-    );
+    // Use the interviewId from params if available
+    if (params?.interviewId) {
+      router.push(`/roadmap/interviewSolution/${params.interviewId}`);
+    } else if (interviewData?._id) {
+      // If no params but we have interviewData with an ID, use that
+      router.push(`/roadmap/interviewSolution/${interviewData._id}`);
+    } else {
+      // Fallback to the main interview solution page
+      router.push(`/roadmap/interviewSolution`);
+      toast.info("Interview ID not found. Showing all interviews.");
+    }
   };
 
   return (
@@ -245,9 +284,8 @@ const ConfidenceAnalysisSummary = ({
 
           {/* Detailed Metrics */}
           <Tabs defaultValue="metrics" className="w-full mt-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="metrics">Detailed Metrics</TabsTrigger>
-              <TabsTrigger value="emotions">Emotional Analysis</TabsTrigger>
               <TabsTrigger value="improvements">Improvement Plan</TabsTrigger>
             </TabsList>
 
@@ -315,48 +353,6 @@ const ConfidenceAnalysisSummary = ({
                       ? "Your posture was adequate but could use improvement."
                       : "Your posture needs significant improvement."}
                   </p>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Emotions Tab */}
-            <TabsContent
-              value="emotions"
-              className="p-4 bg-white rounded-xl border border-gray-200 mt-2"
-            >
-              <div className="space-y-4">
-                <h3 className="flex items-center text-lg font-medium text-gray-700 mb-2">
-                  <Smile className="mr-2 h-5 w-5 text-yellow-500" /> Emotional
-                  Expression
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {confidenceResults.map((result, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-gray-50 rounded-lg border border-gray-200"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium">Second {idx + 1}</span>
-                        <span
-                          className={`text-sm px-2 py-1 rounded-full capitalize ${
-                            result.emotion === "happy" ||
-                            result.emotion === "neutral"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {result.emotion}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        Confidence:{" "}
-                        <span className="font-medium">
-                          {result.confidence.toFixed(1)}%
-                        </span>
-                      </p>
-                    </div>
-                  ))}
                 </div>
               </div>
             </TabsContent>
@@ -450,9 +446,7 @@ const ConfidenceAnalysisSummary = ({
           </Tabs>
         </CardContent>
       </Card>
-       <Button onClick={()=>router.push(`/roadmap/interviewSolution`)}>Interview Analysis</Button>
-     
-
+      <Button onClick={handleInterviewAnalysis}>View Technical Analysis</Button>
     </div>
   );
 };

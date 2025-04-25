@@ -1,118 +1,3 @@
-// "use client"
-// import React, { useEffect, useState } from "react";
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardFooter,
-//   CardHeader,
-//   CardTitle,
-// } from "@/components/ui/card";
-// import { Loader2 } from "lucide-react";
-// import axios from "axios";
-
-// const page = () => {
-//   const [interviewData, setInterviewData] = useState([]);
-//   const [isLoading, setIsLoading] = useState(true);
-//     const [error, setError] = useState(null);
-
-//   const getInterviewDetails = async () => {
-//     try {
-//       setIsLoading(true);
-//       const response = await axios.get(
-//         `http://localhost:3000/api/getUserAnswer`
-//       );
-//       setInterviewData(response.data);
-//       setIsLoading(false);
-//     } catch (error) {
-//       console.error("Error fetching interview data:", error);
-//       setError("Failed to load interview data. Please try again.");
-//       setIsLoading(false);
-//     }
-//   };
-
-//  useEffect(() => {
-//     getInterviewDetails();
-//   }, []);
-  
-
-  
-//   if (isLoading) {
-//     return (
-//       <div className="flex items-center justify-center h-[85vh]">
-//         <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-//         <p>Loading interview data...</p>
-//       </div>
-//     );
-//   }
-
-//   if (error) {
-//     return (
-//       <div className="flex items-center justify-center h-[85vh]">
-//         <p className="text-red-500">{error}</p>
-//       </div>
-//     );
-//   }
-
-//   if (!interviewData) {
-//     return (
-//       <div className="flex items-center justify-center h-[85vh]">
-//         <p>No interview solution available.</p>
-//       </div>
-//     );
-//   }
-
-
-//   return (
-//     <div className="flex text-center items-center  w-full mt-56 bg-primary justify-center">
-//       <Card className="">
-//         <CardHeader>
-//           <CardTitle>Lets Analyse Your Interviews</CardTitle>
-//           <CardDescription>Card Description</CardDescription>
-//         </CardHeader>
-//         <CardContent>
-   
-  
-
-//     <div className="interview-container">
-//       <h2>Interview Results</h2>
-//       {interviewData.map((interview, index) => (
-//         <div key={interview._id || index} className="interview-card">
-//           <h3>Interview ID: {interview.interviewId}</h3>
-          
-//           <div className="interview-questions">
-//             <h4>Questions and Answers:</h4>
-//             {interview.interviewData.map((item, i) => (
-//               <div key={i} className="qa-pair">
-//                 <p><strong>Question:</strong> {item.question}</p>
-//                 <p><strong>Answer:</strong> {item.answer}</p>
-//               </div>
-//             ))}
-//           </div>
-          
-//           <div className="feedback-section">
-//             <h4>Feedback:</h4>
-//             {interview.feedbackArray.map((feedback, i) => (
-//               <div key={i} className="feedback-item">
-//                 <p><strong>Modified Response:</strong> {feedback.modifiedResponse}</p>
-//                 <p><strong>Question Feedback:</strong> {feedback.questionFeedback}</p>
-//                 <p><strong>Answer Rating:</strong> {feedback.answerRating}</p>
-//               </div>
-//             ))}
-//           </div>
-          
-          
-//         </div>
-//       ))}
-//     </div>
-
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// };
-
-// export default page;
 "use client"
 import React, { useEffect, useState } from "react";
 import {
@@ -124,21 +9,38 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, Clock, ArrowLeft } from "lucide-react";
 import axios from "axios";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 const InterviewSolution = () => {
-  const [interviewData, setInterviewData] = useState([]);
+  const params = useParams();
+  const router = useRouter();
+  const [interviewData, setInterviewData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const getInterviewDetails = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(
-        `http://localhost:3000/api/getUserAnswer`
-      );
-      setInterviewData(response.data);
+      
+      // If an interviewId is provided in the URL, fetch that specific interview
+      if (params?.interviewId) {
+        console.log("Fetching specific interview data for ID:", params.interviewId);
+        const response = await axios.get(
+          `/api/user-answer/${params.interviewId}`
+        );
+        setInterviewData([response.data]); // Wrap in array to maintain component structure
+      } else {
+        // Otherwise fetch all interviews (for the main dashboard)
+        console.log("Fetching all interview data");
+        const response = await axios.get(
+          `/api/getUserAnswer`
+        );
+        setInterviewData(response.data);
+      }
+      
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching interview data:", error);
@@ -149,7 +51,7 @@ const InterviewSolution = () => {
 
   useEffect(() => {
     getInterviewDetails();
-  }, []);
+  }, [params?.interviewId]);
 
   const getRatingColor = (rating) => {
     if (rating >= 8) return "bg-green-100 text-green-800";
@@ -168,6 +70,10 @@ const InterviewSolution = () => {
     });
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[85vh]">
@@ -182,6 +88,9 @@ const InterviewSolution = () => {
       <div className="flex flex-col items-center justify-center h-[85vh]">
         <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
         <p className="text-lg text-red-500">{error}</p>
+        <Button onClick={handleBack} className="mt-4 flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" /> Go Back
+        </Button>
       </div>
     );
   }
@@ -190,14 +99,25 @@ const InterviewSolution = () => {
     return (
       <div className="flex flex-col items-center justify-center h-[85vh]">
         <Clock className="h-12 w-12 text-gray-500 mb-4" />
-        <p className="text-lg">No interview data available yet.</p>
+        <p className="text-lg">No interview data available.</p>
+        <Button onClick={handleBack} className="mt-4 flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" /> Go Back
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-12 px-4 mt-11">
-      <h1 className="text-3xl font-bold text-center mb-12">Interview Analysis Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <Button onClick={handleBack} variant="outline" className="flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+        <h1 className="text-3xl font-bold text-center">
+          {params?.interviewId ? "Interview Analysis" : "Interview Analysis Dashboard"}
+        </h1>
+        <div className="w-24"></div> {/* Empty div for flex alignment */}
+      </div>
       
       <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
         {interviewData.map((interview, index) => (
@@ -205,7 +125,9 @@ const InterviewSolution = () => {
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-xl">Interview #{index + 1}</CardTitle>
+                  <CardTitle className="text-xl">
+                    {params?.interviewId ? "Interview Details" : `Interview #${index + 1}`}
+                  </CardTitle>
                   <CardDescription className="text-sm">
                     ID: {interview.interviewId}
                   </CardDescription>
@@ -226,7 +148,7 @@ const InterviewSolution = () => {
                   </div>
                   
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-blue-700 mb-2">Correct Answer:</h3>
+                    <h3 className="font-semibold text-blue-700 mb-2">Your Answer:</h3>
                     <p className="text-gray-800">{item.answer}</p>
                   </div>
                 </div>
@@ -245,7 +167,7 @@ const InterviewSolution = () => {
                     
                     {feedback.modifiedResponse && (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-500 mb-1">Your Response:</h4>
+                        <h4 className="text-sm font-semibold text-gray-500 mb-1">Corrected Response:</h4>
                         <p className="text-sm bg-green-50 p-3 rounded border border-green-100">
                           {feedback.modifiedResponse}
                         </p>
@@ -261,11 +183,11 @@ const InterviewSolution = () => {
                     )}
 
 
-                    {typeof feedback.answerRating === 'number' && (
+                    {(typeof feedback.answerRating === 'number' || typeof feedback.answerRating === 'string') && (
                       <div>
                         <h4 className="text-sm font-semibold text-gray-500 mb-1">Rating:</h4>
                         <div className="flex items-center">
-                          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getRatingColor(feedback.answerRating)}`}>
+                          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getRatingColor(parseInt(feedback.answerRating))}`}>
                             {feedback.answerRating}/10
                           </div>
                         </div>
