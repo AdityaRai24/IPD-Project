@@ -148,7 +148,7 @@ const InterviewSolution = () => {
                   </div>
                   
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-blue-700 mb-2">Your Answer:</h3>
+                    <h3 className="font-semibold text-blue-700 mb-2">Correct Answer:</h3>
                     <p className="text-gray-800">{item.answer}</p>
                   </div>
                 </div>
