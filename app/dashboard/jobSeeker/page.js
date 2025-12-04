@@ -251,9 +251,10 @@ export default function Dashboard() {
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div className="flex px-4 flex-wrap items-center justify-between gap-4">
-              {cards.map((item) => {
+              {cards.map((item, index) => {
                 return (
                   <div
+                    key={index}
                     className="flex rounded-xl w-[270px] cursor-pointer shadow-primary 
                 shadow-sm transition duration-100 ease-in bg-[#f8f5f5] hover:bg-[#2a3535]
                 hover:text-white text-[#2a3535] p-4 items-center justify-start gap-4 group"

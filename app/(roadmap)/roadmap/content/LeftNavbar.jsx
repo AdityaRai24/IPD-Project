@@ -1,13 +1,15 @@
 "use client";
+import React, { useEffect, Suspense } from "react";
 import { StepForward, BookOpen, Lock, CheckCircle, Circle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect } from "react";
 import { useRoadmapStore } from "@/store/useRoadmapStore";
 
-const LeftNavbar = () => {
+// --- 1. Inner Component (Contains the Logic) ---
+const LeftNavbarContent = () => {
   const { roadmap, fetchRoadmap } = useRoadmapStore();
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const topic = searchParams.get("topic");
   const currentSectionIdx = parseInt(searchParams.get("sectionIdx") || searchParams.get("section") || "0");
   const currentLevelId = parseInt(searchParams.get("levelId") || searchParams.get("level") || "1");
@@ -50,18 +52,17 @@ const LeftNavbar = () => {
         <h1 className="text-xl font-bold text-gray-800">Learning Path</h1>
         <p className="text-sm text-gray-600">Track your progress through each unit</p>
       </div>
-      
+
       <div className="space-y-2 p-2">
         {roadmap?.map((item, sectionIndex) => {
           const isUnlocked = isSectionUnlocked(sectionIndex);
           const isCompleted = isSectionCompleted(sectionIndex);
-          
+
           return (
             <div
               key={sectionIndex}
-              className={`bg-white rounded-lg p-4 transition-colors ${
-                isUnlocked ? "hover:bg-gray-50" : "opacity-75"
-              }`}
+              className={`bg-white rounded-lg p-4 transition-colors ${isUnlocked ? "hover:bg-gray-50" : "opacity-75"
+                }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <div>
@@ -77,23 +78,22 @@ const LeftNavbar = () => {
                   <Lock size={16} className="text-gray-400" />
                 )}
               </div>
-              
+
               <div className="space-y-2 ml-2">
                 {item.levels.map((levelItem, levelIndex) => {
                   const isCurrentTopic = topic === levelItem.description;
                   const isLevelCompleted = levelItem.completed;
-                  
+
                   return (
                     <div
                       key={levelIndex}
                       onClick={() => isUnlocked && handleNavigation(levelItem, sectionIndex, levelIndex)}
-                      className={`flex items-center gap-2 p-2 rounded-md transition-all ${
-                        !isUnlocked 
-                          ? "cursor-not-allowed text-gray-400" 
-                          : isCurrentTopic
-                            ? "bg-blue-50 text-blue-700 cursor-pointer"
-                            : "hover:bg-gray-100 cursor-pointer text-gray-600"
-                      }`}
+                      className={`flex items-center gap-2 p-2 rounded-md transition-all ${!isUnlocked
+                        ? "cursor-not-allowed text-gray-400"
+                        : isCurrentTopic
+                          ? "bg-blue-50 text-blue-700 cursor-pointer"
+                          : "hover:bg-gray-100 cursor-pointer text-gray-600"
+                        }`}
                     >
                       {!isUnlocked ? (
                         <Lock size={16} className="text-gray-400" />
@@ -106,15 +106,14 @@ const LeftNavbar = () => {
                             : "text-gray-400"
                         } />
                       )}
-                      <p className={`text-sm ${
-                        !isUnlocked
-                          ? "text-gray-400"
-                          : isCurrentTopic
-                            ? "font-medium text-blue-700"
-                            : isLevelCompleted
-                              ? "text-green-600"
-                              : "text-gray-600"
-                      }`}>
+                      <p className={`text-sm ${!isUnlocked
+                        ? "text-gray-400"
+                        : isCurrentTopic
+                          ? "font-medium text-blue-700"
+                          : isLevelCompleted
+                            ? "text-green-600"
+                            : "text-gray-600"
+                        }`}>
                         {levelItem.description}
                       </p>
                     </div>
@@ -126,6 +125,30 @@ const LeftNavbar = () => {
         })}
       </div>
     </div>
+  );
+};
+
+// --- 2. Fallback Component ---
+const LeftNavbarSkeleton = () => (
+  <div className="w-72 pt-20 bg-white shadow-lg fixed h-screen border-r border-gray-100">
+    <div className="p-4 border-b">
+      <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+      <div className="h-4 w-48 bg-gray-100 rounded animate-pulse"></div>
+    </div>
+    <div className="p-4 space-y-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-24 bg-gray-50 rounded animate-pulse"></div>
+      ))}
+    </div>
+  </div>
+);
+
+// --- 3. Wrapper Component (Exported) ---
+const LeftNavbar = () => {
+  return (
+    <Suspense fallback={<LeftNavbarSkeleton />}>
+      <LeftNavbarContent />
+    </Suspense>
   );
 };
 

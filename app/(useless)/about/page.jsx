@@ -26,7 +26,7 @@ const AboutPage = () => {
           </h2>
           <ul className="list-disc list-inside text-black mb-6">
             <li className="mb-2">Integrity: We operate with transparency and honesty in all our dealings.</li>
-            <li className="mb-2">Customer Focus: We put our clients' needs at the center of everything we do.</li>
+            <li className="mb-2">Customer Focus: We put our clients&apos; needs at the center of everything we do.</li>
             <li className="mb-2">Innovation: We continuously seek new ways to improve and adapt to industry changes.</li>
             <li className="mb-2">Excellence: We are committed to delivering high-quality services and results.</li>
           </ul>

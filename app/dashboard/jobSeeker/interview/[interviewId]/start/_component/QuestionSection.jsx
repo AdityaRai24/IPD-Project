@@ -167,7 +167,7 @@ const QuestionSection = ({ interviewData }) => {
       <div className="w-full space-y-4">
         <h2 className="text-xl font-semibold">Interview Complete</h2>
         <p className="mb-6">
-          Thank you for completing the interview. Here's your personalized
+          Thank you for completing the interview. Here&apos;s your personalized
           analysis:
         </p>
 
