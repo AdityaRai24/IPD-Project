@@ -6,7 +6,7 @@ const ContactPage = () => {
           Contact Us
         </h1>
         <p className="text-center text-black mb-12">
-        We’d love to hear from you! Whether you have questions about our recruitment services, need assistance with your job search, or want to inquire about our hiring process, our team is here to help.</p>
+        We&apos;d love to hear from you! Whether you have questions about our recruitment services, need assistance with your job search, or want to inquire about our hiring process, our team is here to help.</p>
 
 <p className="text-center text-black mb-12"><strong>Get in Touch</strong></p>
 
@@ -16,13 +16,13 @@ const ContactPage = () => {
 <p className="text-center text-black mb-12"><strong>Business Hours:</strong> 9am-5pm</p>
 
 <p className="text-center text-black mb-12"><strong>For Job Seekers</strong></p>
-<p className="text-center text-black mb-12">If you're looking for your next career opportunity or have questions about job applications, please reach out to us at EmploEasejobs@gmail.com.</p>
+<p className="text-center text-black mb-12">If you&apos;re looking for your next career opportunity or have questions about job applications, please reach out to us at EmploEasejobs@gmail.com.</p>
 
 <p className="text-center text-black mb-12"><strong>For Employers</strong></p>
 <p className="text-center text-black mb-12">For inquiries about our recruitment services, partnership opportunities, or to discuss your hiring needs, contact us at EmploEasejobs@gmail.com.</p>
 
 <p className="text-center text-black mb-12"><strong>General Inquiries</strong></p>
-<p className="text-center text-black mb-12">For any general questions or feedback, feel free to use our contact form below, and we’ll get back to you as soon as possible.</p>
+<p className="text-center text-black mb-12">For any general questions or feedback, feel free to use our contact form below, and we&apos;ll get back to you as soon as possible.</p>
 
 
         <div className="max-w-lg mx-auto p-8 bg-white shadow-md rounded-md">

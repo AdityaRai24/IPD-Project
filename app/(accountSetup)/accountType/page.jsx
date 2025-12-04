@@ -5,7 +5,9 @@ import { ArrowRight, BriefcaseBusiness, Handshake } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
-const page = () => {
+import Image from "next/image";
+
+const AccountTypePage = () => {
   const [selected, setSelected] = useState("");
 
   const router = useRouter()
@@ -14,11 +16,13 @@ const page = () => {
     <div className="mt-24">
       <h1 className="text-center text-4xl font-bold tracking-normal">
         Choose your <span className="text-primary">Account Type</span>
-        <img
-          src="/dual-underline.svg"
-          className="w-[190px] absolute right-[35%]"
-          alt=""
-        />
+        <div className="relative w-[190px] h-[20px] absolute right-[35%]">
+            <Image
+            src="/dual-underline.svg"
+            fill
+            alt="underline"
+            />
+        </div>
       </h1>
 
       <div className="flex items-center justify-center">
@@ -35,7 +39,7 @@ const page = () => {
               </div>
               <div>
                 <h1 className="text-md font-bold tracking-normal">
-                  I'm a Job Seeker
+                  I&apos;m a Job Seeker
                 </h1>
                 <p className="text-sm text-[#5a5a5a] font-medium">
                   Find and apply for job opportunities that match your skills
@@ -55,7 +59,7 @@ const page = () => {
               </div>
               <div>
                 <h1 className="text-md font-bold tracking-normal">
-                  I'm a Recruiter
+                  I&apos;m a Recruiter
                 </h1>
                 <p className="text-sm text-[#5a5a5a] font-medium">
                   Post job listings and discover qualified candidates to fill
@@ -73,4 +77,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default AccountTypePage;

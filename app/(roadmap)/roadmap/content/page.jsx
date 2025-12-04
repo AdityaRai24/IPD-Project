@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react"; // Added Suspense
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,20 @@ import AddNewInterView from "@/components/AddNewInterView";
 import { useRoadmapStore } from "@/store/useRoadmapStore";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+// --- Helper Components ---
+
+const LoadingView = () => (
+  <div className="flex flex-col items-center justify-center min-h-[60vh]">
+    <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+    <h2 className="text-lg font-medium text-gray-800">
+      Loading content...
+    </h2>
+    <p className="text-gray-500 text-sm mt-2">
+      This may take a few moments.
+    </p>
+  </div>
+);
 
 const CodeBlock = ({ content, language }) => {
   const [copied, setCopied] = useState(false);
@@ -74,7 +88,9 @@ const CodeBlock = ({ content, language }) => {
   );
 };
 
-const LearningContentPage = () => {
+// --- Main Logic Component (Inner) ---
+// This component uses useSearchParams and contains your original logic
+const LearningContent = () => {
   const router = useRouter();
   const { roadmap } = useRoadmapStore();
   const [content, setContent] = useState(null);
@@ -86,20 +102,19 @@ const LearningContentPage = () => {
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentTopic, setCurrentTopic] = useState("");
-  const [activeView, setActiveView] = useState("main"); // 'main', 'quiz', or 'interview'
+  const [activeView, setActiveView] = useState("main");
   const [openDialog, setOpenDialog] = useState(false);
 
   const generateContent = async () => {
     if (!topic || generating || !roadmap) return;
 
-    // Safety check for roadmap structure
     const section = roadmap[sectionIdx];
     const level = section?.levels?.find((item) => item.level == levelId);
-    
+
     if (!level) {
-        console.error("Level details not found in roadmap");
+      console.error("Level details not found in roadmap");
     }
-    
+
     const details = level?.details?.join(",") || "";
 
     try {
@@ -131,7 +146,6 @@ const LearningContentPage = () => {
   };
 
   useEffect(() => {
-    // Reset state when topic changes
     if (topic !== currentTopic) {
       setContent(null);
       setLoading(true);
@@ -217,7 +231,6 @@ const LearningContentPage = () => {
     }
   };
 
-  // Card navigation for Quiz and Interview options
   const InteractionCardsSection = () => (
     <div className="mt-8 grid md:grid-cols-2 gap-4">
       <Card className="hover:shadow-md transition-shadow cursor-pointer border-gray-200">
@@ -264,7 +277,6 @@ const LearningContentPage = () => {
     </div>
   );
 
-  // Quiz view component
   const QuizView = () => (
     <Card className="border-0 shadow-lg bg-white rounded-xl">
       <CardHeader className="border-b border-gray-100 p-6">
@@ -294,19 +306,6 @@ const LearningContentPage = () => {
     </Card>
   );
 
-  // Loading state
-  const LoadingView = () => (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
-      <h2 className="text-lg font-medium text-gray-800">
-        Generating content for {topic}...
-      </h2>
-      <p className="text-gray-500 text-sm mt-2">
-        This may take a few moments.
-      </p>
-    </div>
-  );
-
   if (error) {
     return (
       <div className="max-w-4xl mx-auto p-4 pt-10">
@@ -314,8 +313,8 @@ const LearningContentPage = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             className="mt-3 bg-white text-red-600 hover:bg-gray-50"
             onClick={() => window.location.reload()}
@@ -336,7 +335,6 @@ const LearningContentPage = () => {
       <article className="max-w-4xl mx-auto space-y-6">
         {activeView === "main" && (
           <>
-            {/* Main Content Card */}
             <Card className="border-0 shadow-sm bg-white rounded-xl overflow-hidden">
               <CardHeader className="p-8 border-b border-gray-100 bg-white">
                 <div className="space-y-2">
@@ -354,11 +352,9 @@ const LearningContentPage = () => {
                 </div>
               </CardHeader>
 
-              {/* Content Sections */}
               <CardContent className="p-8 space-y-10">
                 {content.sections?.map((section, index) => (
                   <section key={index} className="space-y-4">
-                    {/* Section Header */}
                     <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
                       <div className="p-2 rounded-lg bg-gray-100 text-gray-700">
                         {getIconForSection(section.type)}
@@ -368,7 +364,6 @@ const LearningContentPage = () => {
                       </h2>
                     </div>
 
-                    {/* Section Content */}
                     <div className="space-y-4 pl-1">
                       {section.content?.map((block, idx) => (
                         <div key={idx} className="space-y-2">
@@ -384,10 +379,8 @@ const LearningContentPage = () => {
                   </section>
                 ))}
 
-                {/* Quiz & Interview Card Navigation */}
                 <InteractionCardsSection />
 
-                {/* Navigation Footer */}
                 <div className="flex justify-between items-center pt-6 mt-8 border-t border-gray-100">
                   <Button
                     variant="ghost"
@@ -416,17 +409,14 @@ const LearningContentPage = () => {
               </CardContent>
             </Card>
 
-            {/* AddNewInterview component stays on main view only but is hidden by default */}
             <div className="hidden">
               <AddNewInterView itemContent={content?.title || topic} />
             </div>
           </>
         )}
 
-        {/* Conditionally render Quiz View */}
         {activeView === "quiz" && <QuizView />}
 
-        {/* Interview Modal - this is controlled by the interviewDialogOpen state */}
         {openDialog && (
           <AddNewInterView
             itemContent={content?.title || topic}
@@ -436,6 +426,16 @@ const LearningContentPage = () => {
         )}
       </article>
     </div>
+  );
+};
+
+// --- Parent Wrapper Component (Exported) ---
+// This is the fix: Wrap the component using searchParams in Suspense
+const LearningContentPage = () => {
+  return (
+    <Suspense fallback={<LoadingView />}>
+      <LearningContent />
+    </Suspense>
   );
 };
 

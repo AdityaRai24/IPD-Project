@@ -168,7 +168,7 @@ const JobFormpage = () => {
               </h2>
               <p className="text-gray-600 mb-6">
                 List the skills and experience required for this job. This will
-                help applicants understand if they're a good fit.
+                help applicants understand if they&apos;re a good fit.
               </p>
               <JobRequirements
                 form={form}
