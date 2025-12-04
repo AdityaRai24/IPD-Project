@@ -5,33 +5,27 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  CardDescription,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   Loader2,
-  BookOpen,
-  Trophy,
-  Target,
   PlusCircle,
   Calendar,
   ChevronRight,
-  Sparkles,
+  Map,
+  Clock,
+  CheckCircle2
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { roadmapService } from "@/services/roadmapService";
 
 const RoadmapDashboard = () => {
   const router = useRouter();
-  const [roadmap, setRoadmap] = useState([]);
+  const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    completedLevels: 0,
-    totalLevels: 0,
-    completionPercentage: 0,
-  });
-
   const { data: session } = useSession();
 
   const greeting = new Date().getHours() < 12 ? "Good morning" : 
@@ -45,48 +39,38 @@ const RoadmapDashboard = () => {
   });
 
   useEffect(() => {
-    loadRoadmap();
+    fetchRoadmaps();
   }, []);
 
-  const loadRoadmap = () => {
+  const fetchRoadmaps = async () => {
     try {
-      const savedRoadmap = localStorage.getItem("roadmap");
-      if (savedRoadmap) {
-        const parsedRoadmap = JSON.parse(savedRoadmap);
-        const initializedRoadmap = parsedRoadmap.map((section) => ({
-          ...section,
-          levels: section.levels.map((level) => ({
-            ...level,
-            completed: level.completed || false,
-          })),
-        }));
-        setRoadmap(initializedRoadmap);
-        calculateStats(initializedRoadmap);
-      } else {
-        setError("No roadmap found in storage");
-      }
-    } catch (error) {
-      setError("Failed to load roadmap data");
+      const data = await roadmapService.getRoadmaps();
+      setRoadmaps(data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load roadmaps");
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateStats = (roadmapData) => {
+  const calculateProgress = (roadmapData) => {
+    if (!roadmapData || !Array.isArray(roadmapData)) return 0;
+    
     const totalLevels = roadmapData.reduce(
-      (total, section) => total + section.levels.length,
+      (total, section) => total + (section.levels?.length || 0),
       0
     );
+    
+    if (totalLevels === 0) return 0;
+
     const completedLevels = roadmapData.reduce(
       (total, section) =>
-        total + section.levels.filter((level) => level.completed).length,
+        total + (section.levels?.filter((level) => level.completed)?.length || 0),
       0
     );
-    const completionPercentage = totalLevels
-      ? Math.round((completedLevels / totalLevels) * 100)
-      : 0;
 
-    setStats({ completedLevels, totalLevels, completionPercentage });
+    return Math.round((completedLevels / totalLevels) * 100);
   };
 
   if (loading) {
@@ -94,7 +78,7 @@ const RoadmapDashboard = () => {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-gray-600">Preparing your learning journey...</p>
+          <p className="text-gray-600">Loading your roadmaps...</p>
         </div>
       </div>
     );
@@ -120,105 +104,73 @@ const RoadmapDashboard = () => {
                 {greeting}, {session?.user?.name || 'Learner'} 
                 <span className="text-primary">!</span>
               </h1>
-              <p className="text-gray-600">Your learning adventure continues today</p>
+              <p className="text-gray-600">Manage your learning paths</p>
             </div>
-            <div className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-4">
               <Button
-                variant="outline"
                 onClick={() => router.push("/roadmap/create")}
-                className="gap-2 rounded-xl px-6 py-5 text-base font-medium border-2 hover:bg-gray-50"
-              >
-                <PlusCircle className="w-5 h-5" />
-                New Journey
-              </Button>
-              <Button 
-                onClick={() => router.push("/roadmap/generate")} 
                 className="gap-2 rounded-xl px-6 py-5 text-base font-medium bg-primary hover:bg-primary/90"
               >
-                <Target className="w-5 h-5" />
-                View Progress
+                <PlusCircle className="w-5 h-5" />
+                Create New Roadmap
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 border-0 shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="border-b bg-white/50 backdrop-blur-sm">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                <BookOpen className="w-5 h-5 text-primary" />
-                Learning Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 bg-white">
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                {roadmap.map((section, index) => {
-                  const completedLevels = section.levels.filter(
-                    (level) => level.completed
-                  ).length;
-                  const percentage = Math.round(
-                    (completedLevels / section.levels.length) * 100
-                  );
-
-                  return (
-                    <div
-                      key={index}
-                      onClick={() => router.push("/roadmap/generate")}
-                      className="group p-5 bg-gray-50 rounded-xl hover:bg-white hover:shadow-md transition-all cursor-pointer border border-gray-100 hover:border-primary/20"
-                    >
-                      <div className="flex justify-between items-center mb-3">
-                        <div>
-                          <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors flex items-center gap-2">
-                            Unit {index + 1}: {section.name}
-                            <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </h3>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {completedLevels} of {section.levels.length} chapters complete
-                          </p>
-                        </div>
-                        <span className="text-sm font-medium px-3 py-1 rounded-full bg-white shadow-sm border border-gray-100 group-hover:border-primary/20 group-hover:bg-primary/5 transition-colors">
-                          {percentage}%
-                        </span>
-                      </div>
-                      <Progress 
-                        value={percentage} 
-                        className="h-2 bg-gray-100 group-hover:bg-primary/10"
-                      />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {roadmaps.length === 0 ? (
+            <div className="col-span-full text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
+              <Map className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">No roadmaps yet</h3>
+              <p className="text-gray-500 mb-6">Start your first learning journey today!</p>
+              <Button onClick={() => router.push("/roadmap/create")}>
+                Create Roadmap
+              </Button>
+            </div>
+          ) : (
+            roadmaps.map((roadmap) => {
+              const progress = calculateProgress(roadmap.data);
+              return (
+                <Card 
+                  key={roadmap.id} 
+                  className="group hover:shadow-md transition-all cursor-pointer border-gray-200 hover:border-primary/50"
+                  onClick={() => router.push(`/roadmap/${roadmap.id}`)}
+                >
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="truncate">{roadmap.title}</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
+                    </CardTitle>
+                    <CardDescription className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Created {new Date(roadmap.createdAt).toLocaleDateString()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-gray-600 font-medium">Progress</span>
+                      <span className={`font-bold ${progress === 100 ? 'text-green-600' : 'text-primary'}`}>
+                        {progress}%
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="border-b bg-white/50 backdrop-blur-sm">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                <Trophy className="w-5 h-5 text-yellow-500" />
-                Your Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 bg-white">
-              <div className="space-y-6">
-                <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-sm mb-4">
-                    <Sparkles className="w-8 h-8 text-primary" />
-                  </div>
-                  <p className="text-5xl font-bold text-primary mb-2">
-                    {stats.completionPercentage}%
-                  </p>
-                  <p className="text-gray-600">Overall Progress</p>
-                </div>
-
-                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100/50 rounded-xl p-6 text-center">
-                  <p className="text-4xl font-bold text-yellow-600 mb-2">
-                    {stats.completedLevels}/{stats.totalLevels}
-                  </p>
-                  <p className="text-gray-600">Chapters Completed</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-green-500' : 'bg-primary'}`}
+                        style={{ width: `${progress}%` }}
+                      /> 
+                    </div>
+                    {progress === 100 && (
+                      <div className="mt-3 flex items-center gap-1.5 text-xs text-green-600 font-medium">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Completed
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
       </div>
     </div>

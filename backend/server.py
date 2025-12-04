@@ -17,7 +17,7 @@ mp_pose = mp.solutions.pose
 
 # ---------------- Video Analysis Functions ---------------- #
 
-def analyze_emotion(frame):
+def analyze_emotion(frame): 
     """Analyze the dominant emotion and its confidence using DeepFace."""
     try:
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -78,63 +78,82 @@ def calculate_angle(a, b, c):
     """Calculate the angle (in degrees) between the vectors BA and BC."""
     a, b, c = np.array(a), np.array(b), np.array(c)
     ba, bc = a - b, c - b
-    cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
-    # Clip cosine value to avoid numerical issues due to floating point precision
+    
+    # Safety check for zero length vectors
+    norm_ba = np.linalg.norm(ba)
+    norm_bc = np.linalg.norm(bc)
+    if norm_ba == 0 or norm_bc == 0:
+        return 0.0
+
+    cosine_angle = np.dot(ba, bc) / (norm_ba * norm_bc)
     cosine_angle = np.clip(cosine_angle, -1.0, 1.0)
-    return np.degrees(np.arccos(cosine_angle))
+    
+    # FIX 3: Convert numpy float to native python float
+    return float(np.degrees(np.arccos(cosine_angle)))
 
 # ---------------- SocketIO Event ---------------- #
 
 @socketio.on('frame')
 def handle_frame(data):
-    # Decode the received frame from a byte array
-    frame = np.frombuffer(data, dtype=np.uint8)
-    frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-    
-    # Analyze emotion using DeepFace
-    emotion, confidence = analyze_emotion(frame)
-    
-    # Estimate gaze/eye contact using MediaPipe Face Mesh
-    face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1)
-    results_face = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    eye_contact = 0
-    if results_face.multi_face_landmarks:
-        eye_contact = calculate_eye_contact(results_face.multi_face_landmarks[0])
-    
-    # Analyze posture using MediaPipe Pose estimation
-    pose = mp_pose.Pose(static_image_mode=True)
-    results_pose = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    posture_score = 0
-    if results_pose.pose_landmarks:
-        landmarks = results_pose.pose_landmarks.landmark
-        left_shoulder = [
-            landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
-            landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y
-        ]
-        right_shoulder = [
-            landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
-            landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y
-        ]
-        left_hip = [
-            landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,
-            landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y
-        ]
-        right_hip = [
-            landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
-            landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y
-        ]
-        # Compute two angles to get a rough measure of posture
-        shoulder_angle = calculate_angle(left_shoulder, right_shoulder, right_hip)
-        hip_angle = calculate_angle(left_shoulder, left_hip, right_hip)
-        posture_score = (shoulder_angle + hip_angle) / 2
+    try:
+        # Decode the received frame
+        frame = np.frombuffer(data, dtype=np.uint8)
+        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        
+        if frame is None:
+            return
 
-    # Emit the analysis results back to the client
-    emit('analysis_result', {
-        'emotion': emotion,
-        'confidence': confidence,
-        'eye_contact': eye_contact,
-        'posture_score': posture_score
-    })
+        # Analyze emotion
+        emotion, confidence = analyze_emotion(frame)
+        
+        # Estimate gaze/eye contact
+        face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1)
+        results_face = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        eye_contact = 0
+        if results_face.multi_face_landmarks:
+            eye_contact = calculate_eye_contact(results_face.multi_face_landmarks[0])
+        
+        # Analyze posture
+        pose = mp_pose.Pose(static_image_mode=True)
+        results_pose = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        posture_score = 0.0 # Initialize as float
+        
+        if results_pose.pose_landmarks:
+            landmarks = results_pose.pose_landmarks.landmark
+            
+            # Helper to extract coords
+            def get_coords(landmark_idx):
+                return [landmarks[landmark_idx].x, landmarks[landmark_idx].y]
+
+            left_shoulder = get_coords(mp_pose.PoseLandmark.LEFT_SHOULDER.value)
+            right_shoulder = get_coords(mp_pose.PoseLandmark.RIGHT_SHOULDER.value)
+            left_hip = get_coords(mp_pose.PoseLandmark.LEFT_HIP.value)
+            right_hip = get_coords(mp_pose.PoseLandmark.RIGHT_HIP.value)
+            
+            shoulder_angle = calculate_angle(left_shoulder, right_shoulder, right_hip)
+            hip_angle = calculate_angle(left_shoulder, left_hip, right_hip)
+            
+            posture_score = (shoulder_angle + hip_angle) / 2
+
+        # FIX 4: Final Sanitization before emit
+        # We explicitly wrap variables in float() or int() to remove any lingering NumPy types
+        response_data = {
+            'emotion': str(emotion) if emotion else "Neutral", # Handle None
+            'confidence': float(confidence),
+            'eye_contact': int(eye_contact),
+            'posture_score': float(posture_score)
+        }
+
+        emit('analysis_result', response_data)
+        
+        # Clean up resources explicitly to prevent memory leaks in loop
+        face_mesh.close()
+        pose.close()
+
+    except Exception as e:
+        print(f"Error in handle_frame: {e}")
+        # Optional: emit an error state so frontend doesn't hang
+        emit('analysis_result', {'error': str(e)})
 
 # ---------------- Flask Route ---------------- #
 

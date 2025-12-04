@@ -1,5 +1,5 @@
 import { poppins } from "@/utils/fonts";
-import "../globals.css";
+import "@/app/globals.css";
 import AuthProvider from "@/providers/AuthProvider";
 import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/navbar/Navbar";

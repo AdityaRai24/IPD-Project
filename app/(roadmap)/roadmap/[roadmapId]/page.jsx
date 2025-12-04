@@ -20,60 +20,35 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import QuestionSection from "@/app/dashboard/jobSeeker/interview/[interviewId]/start/_component/QuestionSection";
 import { useRoadmapStore } from "@/store/useRoadmapStore";
 import RoadmapGraph from "@/components/roadmap/RoadmapGraph";
 import { Button } from "@/components/ui/button";
 
-const RoadmapPage = () => {
+const RoadmapDetailPage = ({ params }) => {
   const router = useRouter();
-  const { roadmap, setRoadmap } = useRoadmapStore();
-  const [loading, setLoading] = useState(true);
+  const { roadmapId } = params;
+  const { roadmap, fetchRoadmap, updateRoadmapProgress, isLoading, error } = useRoadmapStore();
+  
   const [generatingFor, setGeneratingFor] = useState(null);
-  const [error, setError] = useState(null);
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [activeUnit, setActiveUnit] = useState(0);
   const [expandedChapters, setExpandedChapters] = useState({});
   const [viewMode, setViewMode] = useState("list"); // 'list' or 'graph'
 
   useEffect(() => {
-    if (roadmap && roadmap.length > 0) {
-      // Ensure levels have completed property if missing (migration/safety)
-      const initializedRoadmap = roadmap.map((section) => ({
-        ...section,
-        levels: section.levels.map((level) => ({
-          ...level,
-          completed: level.completed || false,
-        })),
-      }));
-      
-      // Only update if actually different to avoid infinite loops, 
-      // but for now just calculating percentage is safe.
-      calculateCompletionPercentage(initializedRoadmap);
-      setLoading(false);
-    } else {
-      // If no roadmap in store, try to load from legacy localStorage or redirect
-      const savedRoadmap = localStorage.getItem("roadmap");
-      if (savedRoadmap) {
-         try {
-            const parsed = JSON.parse(savedRoadmap);
-             setRoadmap(parsed); // Sync to store
-         } catch(e) {
-             console.error("Failed to parse legacy roadmap", e);
-         }
-      } else {
-          // If still nothing, redirect
-          // router.push("/roadmap"); 
-          // Commented out redirect to avoid loops during debugging, 
-          // but in production we might want this.
-          setLoading(false);
-      }
+    if (roadmapId) {
+      fetchRoadmap(roadmapId);
     }
-  }, [roadmap, setRoadmap]);
+  }, [roadmapId, fetchRoadmap]);
+
+  useEffect(() => {
+    if (roadmap && roadmap.length > 0) {
+      calculateCompletionPercentage(roadmap);
+    }
+  }, [roadmap]);
 
   const isSectionUnlocked = (sectionIndex) => {
     if (sectionIndex === 0) return true;
-
     const previousSection = roadmap[sectionIndex - 1];
     return previousSection?.levels.every((level) => level.completed) || false;
   };
@@ -81,10 +56,6 @@ const RoadmapPage = () => {
   const isSectionCompleted = (sectionIndex) => {
     const section = roadmap[sectionIndex];
     return section?.levels.every((level) => level.completed) || false;
-  };
-
-  const saveRoadmapToLocalStorage = (updatedRoadmap) => {
-    localStorage.setItem("roadmap", JSON.stringify(updatedRoadmap));
   };
 
   const calculateCompletionPercentage = (roadmapData) => {
@@ -103,7 +74,7 @@ const RoadmapPage = () => {
     setCompletionPercentage(percentage);
   };
 
-  const toggleCompletion = (sectionIndex, levelIndex) => {
+  const toggleCompletion = async (sectionIndex, levelIndex) => {
     if (!isSectionUnlocked(sectionIndex)) return;
 
     const updatedRoadmap = roadmap.map((section, secIdx) => ({
@@ -115,36 +86,20 @@ const RoadmapPage = () => {
       ),
     }));
 
-    setRoadmap(updatedRoadmap);
-    saveRoadmapToLocalStorage(updatedRoadmap);
-    calculateCompletionPercentage(updatedRoadmap);
+    // Optimistic update handled by store
+    await updateRoadmapProgress(updatedRoadmap);
   };
 
   const generateDesc = async (description, levelId, sectionIndex, level) => {
     if (generatingFor === levelId || !isSectionUnlocked(sectionIndex)) return;
 
-    if (JSON.parse(localStorage.getItem(description))) {
-      router.push(
-        `/roadmap/content?topic=${description}&sectionIdx=${sectionIndex}&levelId=${level}`
-      );
-      return;
-    }
-
-    try {
-      setGeneratingFor(levelId);
-      setError(null);
-      router.push(
-        `/roadmap/content?topic=${description}&sectionIdx=${sectionIndex}&levelId=${level}`
-      );
-    } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "Failed to generate description. Please try again."
-      );
-    } finally {
-      setGeneratingFor(null);
-    }
+    // Check if we already have content (optional optimization)
+    // For now, we just navigate
+    router.push(
+      `/roadmap/content?topic=${description}&sectionIdx=${sectionIndex}&levelId=${level}&roadmapId=${roadmapId}`
+    );
   };
+
   const toggleChapterExpansion = (sectionIndex, levelIndex) => {
     const chapterId = `${sectionIndex}-${levelIndex}`;
     setExpandedChapters((prev) => ({
@@ -235,7 +190,7 @@ const RoadmapPage = () => {
 
     return (
       <Card
-      key={levelId}
+        key={levelId}
         className={`overflow-hidden transition-all duration-200 ${
           isCompleted
             ? "bg-green-50/50 border-green-100"
@@ -310,6 +265,7 @@ const RoadmapPage = () => {
       </Card>
     );
   };
+
   const renderActiveUnit = () => {
     const unit = roadmap[activeUnit];
     if (!unit) return null;
@@ -358,6 +314,28 @@ const RoadmapPage = () => {
     generateDesc(levelData.description, levelId, sectionIndex, levelData.level);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!roadmap || roadmap.length === 0) {
+    return null;
+  }
+
   return (
     <div className="flex mt-20 min-h-screen bg-gray-50/30">
       {viewMode === 'list' && renderSidebar()}
@@ -404,12 +382,6 @@ const RoadmapPage = () => {
           </div>
         </div>
 
-        {error && (
-          <Alert variant="destructive" className="m-8">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
         {viewMode === 'list' ? (
           renderActiveUnit()
         ) : (
@@ -422,4 +394,4 @@ const RoadmapPage = () => {
   );
 };
 
-export default RoadmapPage;
+export default RoadmapDetailPage;

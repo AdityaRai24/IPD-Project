@@ -1,38 +1,46 @@
 "use client";
 import { StepForward, BookOpen, Lock, CheckCircle, Circle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useRoadmapStore } from "@/store/useRoadmapStore";
 
 const LeftNavbar = () => {
-  const [roadmap, setRoadmap] = useState([]);
+  const { roadmap, fetchRoadmap } = useRoadmapStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const topic = searchParams.get("topic");
   const currentSectionIdx = parseInt(searchParams.get("sectionIdx") || searchParams.get("section") || "0");
   const currentLevelId = parseInt(searchParams.get("levelId") || searchParams.get("level") || "1");
+  const roadmapId = searchParams.get("roadmapId");
 
   useEffect(() => {
-    const content = JSON.parse(localStorage.getItem("roadmap"));
-    setRoadmap(content);
-  }, []);
+    if (roadmapId && (!roadmap || roadmap.length === 0)) {
+      fetchRoadmap(roadmapId);
+    }
+  }, [roadmapId, fetchRoadmap, roadmap]);
 
   const isSectionUnlocked = (sectionIndex) => {
     if (sectionIndex === 0) return true;
+    if (!roadmap || roadmap.length === 0) return false;
 
     const previousSection = roadmap[sectionIndex - 1];
     return previousSection?.levels.every((level) => level.completed) || false;
   };
 
   const isSectionCompleted = (sectionIndex) => {
+    if (!roadmap || roadmap.length === 0) return false;
     const section = roadmap[sectionIndex];
     return section?.levels.every((level) => level.completed) || false;
   };
 
   const handleNavigation = (levelItem, sectionIndex, levelIndex) => {
     if (isSectionUnlocked(sectionIndex)) {
-      router.push(
-        `/roadmap/content?topic=${levelItem.description}&sectionIdx=${sectionIndex}&levelId=${levelItem.level || levelIndex+1}`
-      );
+      const targetLevelId = levelItem.level || levelIndex + 1;
+      let url = `/roadmap/content?topic=${encodeURIComponent(levelItem.description)}&sectionIdx=${sectionIndex}&levelId=${targetLevelId}`;
+      if (roadmapId) {
+        url += `&roadmapId=${roadmapId}`;
+      }
+      router.push(url);
     }
   };
 
@@ -73,7 +81,7 @@ const LeftNavbar = () => {
               <div className="space-y-2 ml-2">
                 {item.levels.map((levelItem, levelIndex) => {
                   const isCurrentTopic = topic === levelItem.description;
-                  const isCompleted = levelItem.completed;
+                  const isLevelCompleted = levelItem.completed;
                   
                   return (
                     <div
@@ -89,7 +97,7 @@ const LeftNavbar = () => {
                     >
                       {!isUnlocked ? (
                         <Lock size={16} className="text-gray-400" />
-                      ) : isCompleted ? (
+                      ) : isLevelCompleted ? (
                         <CheckCircle size={16} className="text-green-500" />
                       ) : (
                         <Circle size={16} className={
@@ -103,7 +111,7 @@ const LeftNavbar = () => {
                           ? "text-gray-400"
                           : isCurrentTopic
                             ? "font-medium text-blue-700"
-                            : isCompleted
+                            : isLevelCompleted
                               ? "text-green-600"
                               : "text-gray-600"
                       }`}>
