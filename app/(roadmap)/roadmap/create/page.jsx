@@ -6,8 +6,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Code2, DatabaseZap, Server, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import GenerateButton from "@/lib/GenerateButton";
+import { roadmapService } from "@/services/roadmapService";
+import { useRoadmapStore } from "@/store/useRoadmapStore";
+import { toast } from "sonner";
 
 const getImagePath = (skillName) => {
   const specialCases = {
@@ -43,6 +45,7 @@ const jobRoles = {
       ReactJS: 0,
       NextJS: 0,
       TypeScript: 0,
+      "Tailwind CSS": 0,
       "UI-UX": 0,
       Redux: 0,
     },
@@ -54,8 +57,11 @@ const jobRoles = {
     skills: {
       "Node.js": 0,
       "Express.js": 0,
+      MongoDB: 0,
+      PostgreSQL: 0,
       "Database Design": 0,
       "API Development": 0,
+      Docker: 0,
       "System Design": 0,
       "Cloud Services": 0,
       Security: 0,
@@ -72,6 +78,10 @@ const jobRoles = {
       ReactJS: 0,
       "Node.js": 0,
       "Express.js": 0,
+      MongoDB: 0,
+      PostgreSQL: 0,
+      Docker: 0,
+      AWS: 0,
       "Database Design": 0,
       "API Development": 0,
       "System Architecture": 0,
@@ -82,14 +92,13 @@ const jobRoles = {
 const SkillSelector = () => {
   const [selectedRole, setSelectedRole] = useState("backend");
   const [selectedSkills, setSelectedSkills] = useState(jobRoles.backend.skills);
-  const [error, setError] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const router = useRouter();
+  const { setRoadmap, setSelectedSkills: setStoreSelectedSkills, saveRoadmap } = useRoadmapStore();
 
   const handleRoleChange = (role) => {
     setSelectedRole(role);
     setSelectedSkills(jobRoles[role].skills);
-    setError(null);
   };
 
   const handleSkillSelect = useCallback((item) => {
@@ -126,22 +135,26 @@ const SkillSelector = () => {
       (value) => value > 0
     ).length;
     if (selectedCount === 0) {
-      setError("Please select at least one skill to generate a roadmap.");
+      toast.error("Please select at least one skill to generate a roadmap.");
       return;
     }
 
     try {
       setIsGenerating(true);
-      setError(null);
-      const response = await axios.post(
-        "/api/generate-roadmap",
-        selectedSkills
-      );
-      localStorage.setItem("roadmap", JSON.stringify(response.data));
-      router.push("/roadmap/generate");
+      const generatedData = await roadmapService.generateRoadmap(selectedSkills);
+      
+      // Save to DB
+      const title = `${jobRoles[selectedRole].title} Roadmap`;
+      const savedRoadmap = await saveRoadmap(title, generatedData);
+      
+      setRoadmap(generatedData);
+      setStoreSelectedSkills(selectedSkills);
+      
+      toast.success("Roadmap created successfully!");
+      router.push(`/roadmap/${savedRoadmap.id}`); 
     } catch (error) {
       console.error(error);
-      setError("Failed to generate roadmap. Please try again.");
+      toast.error("Failed to generate roadmap. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -199,7 +212,7 @@ const SkillSelector = () => {
                       ${
                         selectedSkills[item] > 0
                           ? "border-primary/80 bg-white shadow-md"
-                          : "border-gray-200 hover:border-primary/60 hover:bg-white"
+                          : "border-gray-200 hover:border-primary/60 hover:border-primary/60 hover:bg-white"
                       }`}
                   >
                     <CardContent className="p-4 flex flex-col items-center gap-3">
@@ -226,12 +239,6 @@ const SkillSelector = () => {
           ))}
         </Tabs>
 
-        {error && (
-          <div className="mt-6 p-3 rounded-lg bg-red-50 border border-red-100">
-            <p className="text-red-600 text-sm text-center">{error}</p>
-          </div>
-        )}
-
         <div className="mt-10 flex justify-center">
           <GenerateButton
             isGenerating={isGenerating}
@@ -244,3 +251,4 @@ const SkillSelector = () => {
 };
 
 export default SkillSelector;
+

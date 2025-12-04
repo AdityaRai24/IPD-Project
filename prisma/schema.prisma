@@ -31,6 +31,7 @@ model User {
   role          UserRole?  @default(JOB_SEEKER)
   jobSeeker     JobSeeker?
   recruiter     Recruiter?
+  roadmaps      Roadmap[]
 }
 
 model Account {
@@ -129,4 +130,14 @@ model UserAnswer {
   feedbackArray Json
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model Roadmap {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

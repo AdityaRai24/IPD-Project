@@ -785,6 +785,106 @@ export const skills = [
         ]
       }
     ]
+  },
+  {
+    name: "Tailwind CSS",
+    levels: [
+      {
+        level: 1,
+        description: "Fundamentals",
+        details: ["Utility-first concept", "Colors & Spacing", "Typography", "Flexbox & Grid", "Responsive design"]
+      },
+      {
+        level: 2,
+        description: "Component styling",
+        details: ["Reusing styles", "@apply directive", "States (hover, focus)", "Dark mode", "Customizing config"]
+      },
+      {
+        level: 3,
+        description: "Advanced features",
+        details: ["Functions & Directives", "Plugins", "JIT mode", "Optimizing for production", "Design systems"]
+      }
+    ]
+  },
+  {
+    name: "MongoDB",
+    levels: [
+      {
+        level: 1,
+        description: "Basics",
+        details: ["NoSQL concepts", "Documents & Collections", "CRUD operations", "Data types", "Compass GUI"]
+      },
+      {
+        level: 2,
+        description: "Data Modeling",
+        details: ["Schema design", "Embedded vs References", "Indexing strategies", "Validation", "Relationships"]
+      },
+      {
+        level: 3,
+        description: "Aggregation & Performance",
+        details: ["Aggregation Pipeline", "Lookup & Unwind", "Performance tuning", "Replication", "Sharding"]
+      }
+    ]
+  },
+  {
+    name: "PostgreSQL",
+    levels: [
+      {
+        level: 1,
+        description: "SQL Basics",
+        details: ["Relational concepts", "Tables & Columns", "Basic Queries (SELECT, INSERT)", "Filtering & Sorting", "Joins"]
+      },
+      {
+        level: 2,
+        description: "Advanced SQL",
+        details: ["Subqueries", "Views", "Stored Procedures", "Triggers", "Transactions"]
+      },
+      {
+        level: 3,
+        description: "Database Administration",
+        details: ["Indexing", "Query Optimization", "Backup & Restore", "User Management", "Replication"]
+      }
+    ]
+  },
+  {
+    name: "Docker",
+    levels: [
+      {
+        level: 1,
+        description: "Container Basics",
+        details: ["Images vs Containers", "Dockerfile basics", "Running containers", "Port mapping", "Environment variables"]
+      },
+      {
+        level: 2,
+        description: "Docker Compose",
+        details: ["Multi-container apps", "Networking", "Volumes & Persistence", "Compose file structure", "Service dependencies"]
+      },
+      {
+        level: 3,
+        description: "Production & Orchestration",
+        details: ["Image optimization", "Multi-stage builds", "Security best practices", "Container registries", "Intro to Kubernetes"]
+      }
+    ]
+  },
+  {
+    name: "AWS",
+    levels: [
+      {
+        level: 1,
+        description: "Cloud Basics",
+        details: ["EC2 (Virtual Servers)", "S3 (Storage)", "IAM (Permissions)", "RDS (Databases)", "Console navigation"]
+      },
+      {
+        level: 2,
+        description: "Serverless & Networking",
+        details: ["Lambda functions", "API Gateway", "VPC basics", "Route53 (DNS)", "CloudWatch"]
+      },
+      {
+        level: 3,
+        description: "Architecture",
+        details: ["Load Balancing (ELB)", "Auto Scaling", "CloudFormation (IaC)", "Security Groups", "Well-Architected Framework"]
+      }
+    ]
   }
 ]
  

@@ -1,9 +1,12 @@
 flask
 flask-socketio
 flask-cors
-opencv-python
+opencv-python-headless
 numpy
 deepface
 mediapipe
 python-engineio
-python-socketio 
+python-socketio
+gunicorn
+eventlet
+tf-keras

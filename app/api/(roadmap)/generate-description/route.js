@@ -22,21 +22,49 @@ async function queryPineconeVectorStore(client, indexName, namespace, query) {
     
     let queryEmbedding = [];
     try {
-      // Try to get embeddings with error details if it fails
-      // Using a more reliable embedding model
-      const apiOutput = await hf.featureExtraction({
-        model: "sentence-transformers/all-MiniLM-L6-v2",
-        inputs: query.trim(),
-      });
+      // WE MUST USE A 1024 DIMENSION MODEL TO MATCH YOUR PINECONE INDEX
+      // BAAI/bge-large-en-v1.5 outputs 1024 dimensions
+      const modelId = "BAAI/bge-large-en-v1.5"; 
       
-      if (!apiOutput) {
-        throw new Error("No embedding output received");
+      // Direct fetch call to Hugging Face API
+      const response = await fetch(
+        `https://router.huggingface.co/hf-inference/models/${modelId}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.HF_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            inputs: [query.trim()], 
+            options: { wait_for_model: true }
+          }),
+          cache: "no-store", 
+        }
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`HF API Error: ${response.status} - ${errorBody}`);
       }
+
+      const result = await response.json();
       
-      queryEmbedding = Array.from(apiOutput);
-      if (queryEmbedding.length === 0) {
-        throw new Error("Empty embedding received");
+      // Handle Hugging Face response variations (Nested arrays vs flat)
+      // We need a single flat array of 1024 numbers
+      if (Array.isArray(result) && Array.isArray(result[0])) {
+          queryEmbedding = result[0]; // Extract inner array
+      } else {
+          queryEmbedding = result;
       }
+
+      console.log(`Embedding generated. Dimensions: ${queryEmbedding.length}`);
+
+      // DOUBLE CHECK DIMENSIONS BEFORE SENDING TO PINECONE
+      if (queryEmbedding.length !== 1024) {
+          throw new Error(`Dimension mismatch! Model returned ${queryEmbedding.length}, but Pinecone needs 1024.`);
+      }
+
     } catch (embeddingError) {
       console.error("Hugging Face embedding error details:", embeddingError);
       
@@ -130,7 +158,6 @@ export async function POST(req) {
     if (
       !description ||
       typeof description !== "string" ||
-      !details ||
       typeof details !== "string"
     ) {
       return NextResponse.json(
@@ -147,73 +174,128 @@ export async function POST(req) {
       query
     );
 
-    const inputPrompt = `You are a technical content creator specialized in creating in-depth blog articles.
-     Create a comprehensive article about ${description}. While you are creating the article, make sure to include the following details and course : ${details}.
+    const inputPrompt = `You are an expert technical educator.
+     Write a comprehensive, engaging guide about "${description}".
+     
+     Context: ${details}
+     
+     Use these references: ${retrievals}
 
-    Use the following references: ${retrievals}
+     **Tone:** Enthusiastic, clear, and practical. Include "Pro Tips" and "Common Pitfalls".
 
+     **Output Format:**
+     Return ONLY a valid JSON object with this structure:
+     {
+       "title": "Descriptive Title",
+       "description": "Brief overview.",
+       "sections": [
+         {
+           "type": "introduction",
+           "title": "Introduction",
+           "content": [
+             { "type": "text", "content": "Intro paragraph..." }
+           ]
+         },
+         {
+           "type": "concepts",
+           "title": "Core Concepts",
+           "content": [
+             { "type": "text", "content": "Explanation..." },
+             { "type": "callout", "variant": "tip", "title": "Pro Tip", "content": "Tip text..." },
+             { "type": "callout", "variant": "warning", "title": "Warning", "content": "Warning text..." }
+           ]
+         },
+         {
+           "type": "examples",
+           "title": "Examples",
+           "content": [
+             { "type": "text", "content": "Example intro:" },
+             { "type": "code", "language": "javascript", "content": "const x = 1;" },
+             { "type": "text", "content": "Explanation..." }
+           ]
+         }
+       ],
+       "quiz": [
+         {
+           "type": "multiple-choice", 
+           "question": "Question text?",
+           "options": ["Option A", "Option B", "Option C", "Option D"],
+           "correctAnswer": "Option A",
+           "explanation": "Why A is correct."
+         },
+         {
+           "type": "true-false",
+           "question": "Statement is true?",
+           "options": ["True", "False"],
+           "correctAnswer": "True",
+           "explanation": "Reasoning..."
+         },
+         {
+           "type": "code-analysis",
+           "question": "What does this code output?",
+           "codeSnippet": "console.log(1 + '1');",
+           "options": ["2", "11", "NaN", "Error"],
+           "correctAnswer": "11",
+           "explanation": "Type coercion explanation..."
+         }
+       ]
+     }
 
-    Structure the response as a JSON object with the following format:
-    {
-      "title": "Main title of the article",
-      "description": "Brief overview of what will be covered",
-      "sections": [
-        {
-          "type": "introduction",
-          "title": "Introduction",
-          "content": [
-            {
-              "type": "text",
-              "content": "Introductory paragraph..."
-            }
-          ]
-        },
-        {
-          "type": "concepts",
-          "title": "Key Concepts",
-          "content": [
-            {
-              "subtitle": "Important Concept 1",
-              "type": "text",
-              "content": "Explanation..."
-            },
-            {
-              "type": "list",
-              "items": ["Point 1", "Point 2", "Point 3"]
-            }
-          ]
-        },
-        {
-          "type": "examples",
-          "title": "Practical Examples",
-          "content": [
-            {
-              "subtitle": "Example 1",
-              "type": "code",
-              "language": "javascript",
-              "content": "// Code example here"
-            },
-            {
-              "type": "text",
-              "content": "Explanation of the code..."
-            }
-          ]
-        }
-      ]
-    }
-
-    Ensure each section is detailed and includes relevant examples where appropriate. Include code samples for technical topics.
-    
-    Return the data in a proper json format so that it is directly parsable. dont add anything before or after.Also generate a 5 question mcq quiz on this topic and return with this json object.
+     IMPORTANT: Return ONLY the raw JSON. No markdown formatting (no \`\`\`json). No extra text.
     `;
 
-    const result = await chatSession.sendMessage(inputPrompt);
-    const geminiResponse = result.response
-      .text()
-      .replace("```json", "")
-      .replace("```", "");
+    let geminiResponseText = "";
+    try {
+      const result = await chatSession.sendMessage(inputPrompt);
+      geminiResponseText = result.response.text();
+    } catch (geminiError) {
+      console.error("Gemini generation error:", geminiError);
+      return NextResponse.json({
+        title: description,
+        description: "Content generation is currently unavailable. Please try again later.",
+        sections: []
+      });
+    }
 
-    return NextResponse.json(geminiResponse);
+    // Robust JSON Extraction
+    let cleanedResponse = geminiResponseText.trim();
+    
+    // Remove markdown code blocks
+    if (cleanedResponse.startsWith("```json")) {
+        cleanedResponse = cleanedResponse.replace("```json", "").replace("```", "");
+    } else if (cleanedResponse.startsWith("```")) {
+        cleanedResponse = cleanedResponse.replace("```", "").replace("```", "");
+    }
+    
+    // Find the first '{' and last '}'
+    const firstBrace = cleanedResponse.indexOf('{');
+    const lastBrace = cleanedResponse.lastIndexOf('}');
+    
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      cleanedResponse = cleanedResponse.substring(firstBrace, lastBrace + 1);
+    }
+
+    try {
+      const parsedJson = JSON.parse(cleanedResponse);
+      return NextResponse.json(parsedJson);
+    } catch (jsonError) {
+      console.error("Invalid JSON from Gemini:", jsonError);
+      console.log("Raw response:", geminiResponseText);
+      
+      // Fallback response to prevent UI crash
+      return NextResponse.json({
+        title: description,
+        description: "We generated the content but had trouble formatting it.",
+        sections: [
+           {
+            type: "introduction",
+            title: "Content",
+            content: [{ type: "text", content: geminiResponseText.replace(/[{}]/g, '') }] 
+          }
+        ]
+      });
+    }
+
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(

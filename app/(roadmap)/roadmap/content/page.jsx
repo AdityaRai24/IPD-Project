@@ -20,12 +20,17 @@ import {
   ClipboardList,
   Users,
   Loader2,
+  Zap,
+  AlertTriangle,
 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import QuizSection from "../quiz/page";
 import AddNewInterView from "@/components/AddNewInterView";
+import { useRoadmapStore } from "@/store/useRoadmapStore";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const CodeBlock = ({ content, language }) => {
   const [copied, setCopied] = useState(false);
@@ -37,36 +42,41 @@ const CodeBlock = ({ content, language }) => {
   };
 
   return (
-    <div className="relative group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-blue-500 rounded-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-      <div className="relative">
-        <div className="flex items-center justify-between bg-gray-800 rounded-t-xl px-4 py-2">
-          <Badge variant="secondary" className="bg-gray-700 text-gray-200">
-            {language}
-          </Badge>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-400 hover:text-white"
-            onClick={handleCopy}
-          >
-            {copied ? (
-              <CheckCircle className="w-4 h-4 text-green-500" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
-        <pre className="bg-gray-900 text-gray-100 p-6 rounded-b-xl overflow-x-auto font-mono text-sm leading-relaxed">
-          <code>{content}</code>
-        </pre>
+    <div className="relative group my-4 rounded-lg overflow-hidden border border-gray-200">
+      <div className="flex items-center justify-between bg-gray-800 px-4 py-2">
+        <span className="text-xs text-gray-300 font-mono">{language || 'code'}</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-gray-400 hover:text-white h-6 w-6 p-0"
+          onClick={handleCopy}
+        >
+          {copied ? (
+            <CheckCircle className="w-3 h-3 text-green-500" />
+          ) : (
+            <Copy className="w-3 h-3" />
+          )}
+        </Button>
       </div>
+      <SyntaxHighlighter
+        language={language || 'javascript'}
+        style={vscDarkPlus}
+        customStyle={{
+          margin: 0,
+          padding: '1rem',
+          fontSize: '0.9rem',
+        }}
+        showLineNumbers={true}
+      >
+        {content}
+      </SyntaxHighlighter>
     </div>
   );
 };
 
 const LearningContentPage = () => {
   const router = useRouter();
+  const { roadmap } = useRoadmapStore();
   const [content, setContent] = useState(null);
   const [error, setError] = useState(null);
   const searchParams = useSearchParams();
@@ -77,26 +87,32 @@ const LearningContentPage = () => {
   const [loading, setLoading] = useState(true);
   const [currentTopic, setCurrentTopic] = useState("");
   const [activeView, setActiveView] = useState("main"); // 'main', 'quiz', or 'interview'
-  const [interviewDialogOpen, setInterviewDialogOpen] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
 
   const generateContent = async () => {
-    if (!topic || generating) return;
+    if (!topic || generating || !roadmap) return;
 
-    const parsed = JSON.parse(localStorage.getItem("roadmap"));
-    const details = parsed[sectionIdx]?.levels.find((item)=>item.level == levelId).details.join(",");
+    // Safety check for roadmap structure
+    const section = roadmap[sectionIdx];
+    const level = section?.levels?.find((item) => item.level == levelId);
+    
+    if (!level) {
+        console.error("Level details not found in roadmap");
+    }
+    
+    const details = level?.details?.join(",") || "";
 
     try {
       setGenerating(true);
       setError(null);
       const response = await axios.post(
-        "http://localhost:3000/api/generate-description",
+        "/api/generate-description",
         { description: topic, details: details }
       );
 
       let parsedResponse;
       try {
-        parsedResponse = JSON.parse(response.data);
+        parsedResponse = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
       } catch (parseError) {
         console.error("Failed to parse response:", parseError);
         setError("Invalid response format");
@@ -138,17 +154,17 @@ const LearningContentPage = () => {
     } else {
       generateContent();
     }
-  }, [topic, sectionIdx, levelId]);
+  }, [topic, sectionIdx, levelId, roadmap]);
 
   const getIconForSection = (type) => {
     const icons = {
-      introduction: <BookOpen className="w-6 h-6" />,
-      concepts: <Lightbulb className="w-6 h-6" />,
-      examples: <Code2 className="w-6 h-6" />,
-      conclusion: <BookMarked className="w-6 h-6" />,
-      resources: <Link className="w-6 h-6" />,
-      diagram: <FileCode className="w-6 h-6" />,
-      default: <List className="w-6 h-6" />,
+      introduction: <BookOpen className="w-5 h-5" />,
+      concepts: <Lightbulb className="w-5 h-5" />,
+      examples: <Code2 className="w-5 h-5" />,
+      conclusion: <BookMarked className="w-5 h-5" />,
+      resources: <Link className="w-5 h-5" />,
+      diagram: <FileCode className="w-5 h-5" />,
+      default: <List className="w-5 h-5" />,
     };
     return icons[type] || icons.default;
   };
@@ -159,21 +175,17 @@ const LearningContentPage = () => {
     switch (block.type) {
       case "text":
         return block.content ? (
-          <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed">
+          <div className="prose prose-slate max-w-none text-gray-700 leading-relaxed mb-4">
             {block.content}
           </div>
         ) : null;
 
       case "list":
         return block.items?.length ? (
-          <ul className="space-y-3">
+          <ul className="list-disc list-inside space-y-2 my-4 text-gray-700">
             {block.items.map((item, itemIdx) => (
-              <li
-                key={itemIdx}
-                className="flex items-start gap-3 text-gray-600"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-2.5" />
-                <span className="flex-1">{item}</span>
+              <li key={itemIdx} className="ml-4">
+                {item}
               </li>
             ))}
           </ul>
@@ -184,6 +196,22 @@ const LearningContentPage = () => {
           <CodeBlock content={block.content} language={block.language} />
         ) : null;
 
+      case "callout":
+        const isTip = block.variant === 'tip';
+        return (
+          <Alert className={`my-4 ${isTip ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'}`}>
+            {isTip ? <Zap className="h-4 w-4 text-blue-600" /> : <AlertTriangle className="h-4 w-4 text-amber-600" />}
+            <div className="ml-2">
+              <AlertTitle className={`font-semibold ${isTip ? 'text-blue-800' : 'text-amber-800'}`}>
+                {block.title || (isTip ? "Pro Tip" : "Note")}
+              </AlertTitle>
+              <AlertDescription className={`${isTip ? 'text-blue-700' : 'text-amber-700'}`}>
+                {block.content}
+              </AlertDescription>
+            </div>
+          </Alert>
+        );
+
       default:
         return null;
     }
@@ -191,22 +219,20 @@ const LearningContentPage = () => {
 
   // Card navigation for Quiz and Interview options
   const InteractionCardsSection = () => (
-    <div className="mt-12 grid md:grid-cols-2 gap-6">
-      <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer border-none bg-white shadow-md">
-        <CardContent className="p-8">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="p-4 rounded-full bg-gradient-to-r from-pink-500/10 to-blue-500/10">
-              <ClipboardList className="h-12 w-12 text-pink-600" />
-            </div>
-            <CardTitle className="text-xl font-bold text-gray-800">
+    <div className="mt-8 grid md:grid-cols-2 gap-4">
+      <Card className="hover:shadow-md transition-shadow cursor-pointer border-gray-200">
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center text-center space-y-3">
+            <ClipboardList className="h-8 w-8 text-primary" />
+            <CardTitle className="text-lg font-semibold text-gray-800">
               Take Quiz
             </CardTitle>
-            <p className="text-gray-600">
-              Test your knowledge with interactive questions about{" "}
-              {content?.title || topic}
+            <p className="text-sm text-gray-600">
+              Test your knowledge on {content?.title || topic}
             </p>
             <Button
-              className="mt-4 bg-gradient-to-r from-red-600 to-pink-600 transition-all duration-300  hover:from-pink-700 hover:to-blue-700 text-white"
+              variant="outline"
+              className="mt-2 w-full"
               onClick={() => setActiveView("quiz")}
             >
               Start Quiz
@@ -215,21 +241,19 @@ const LearningContentPage = () => {
         </CardContent>
       </Card>
 
-      <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer border-none bg-white shadow-md">
-        <CardContent className="p-8">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="p-4 rounded-full bg-gradient-to-r from-pink-500/10 to-blue-500/10">
-              <Users className="h-12 w-12 text-blue-600" />
-            </div>
-            <CardTitle className="text-xl font-bold text-gray-800">
-              Take Mock Interview
+      <Card className="hover:shadow-md transition-shadow cursor-pointer border-gray-200">
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center text-center space-y-3">
+            <Users className="h-8 w-8 text-primary" />
+            <CardTitle className="text-lg font-semibold text-gray-800">
+              Mock Interview
             </CardTitle>
-            <p className="text-gray-600">
-              Practice with simulated interview questions about{" "}
-              {content?.title || topic}
+            <p className="text-sm text-gray-600">
+              Practice interview questions for {content?.title || topic}
             </p>
             <Button
-              className="mt-4 bg-gradient-to-r from-red-600 to-pink-600 transition-all duration-300  hover:from-pink-700 hover:to-blue-700 text-white"
+              variant="outline"
+              className="mt-2 w-full"
               onClick={() => setOpenDialog(true)}
             >
               Start Interview
@@ -242,28 +266,28 @@ const LearningContentPage = () => {
 
   // Quiz view component
   const QuizView = () => (
-    <Card className="border-0 shadow-xl bg-white rounded-2xl">
+    <Card className="border-0 shadow-lg bg-white rounded-xl">
       <CardHeader className="border-b border-gray-100 p-6">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             onClick={() => setActiveView("main")}
-            className="w-10 h-10 p-2 rounded-full hover:bg-gray-100"
+            className="h-8 w-8 p-0 rounded-full"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-4 w-4 text-gray-600" />
           </Button>
-          <CardTitle className="text-2xl font-bold text-gray-800">
+          <CardTitle className="text-xl font-bold text-gray-800">
             Quiz: {content?.title || topic}
           </CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="p-8">
+      <CardContent className="p-6">
         {content?.quiz ? (
           <QuizSection quizData={content.quiz} />
         ) : (
           <div className="text-center py-12 text-gray-500">
-            <AlertCircle className="mx-auto h-12 w-12 mb-4 text-gray-400" />
-            <p className="text-lg">No quiz available for this topic.</p>
+            <AlertCircle className="mx-auto h-10 w-10 mb-3 text-gray-400" />
+            <p>No quiz available for this topic.</p>
           </div>
         )}
       </CardContent>
@@ -272,28 +296,32 @@ const LearningContentPage = () => {
 
   // Loading state
   const LoadingView = () => (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl shadow-xl">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500/20 to-blue-500/20 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-pink-600 animate-spin" />
-        </div>
-        <h2 className="text-xl font-semibold text-gray-800">
-          Loading {topic}...
-        </h2>
-        <p className="text-gray-500 text-center max-w-md">
-          We're preparing your learning content. This might take a moment if we're
-          generating fresh content.
-        </p>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+      <h2 className="text-lg font-medium text-gray-800">
+        Generating content for {topic}...
+      </h2>
+      <p className="text-gray-500 text-sm mt-2">
+        This may take a few moments.
+      </p>
     </div>
   );
 
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto p-4">
-        <Alert variant="destructive" className="shadow-lg">
+      <div className="max-w-4xl mx-auto p-4 pt-10">
+        <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="mt-3 bg-white text-red-600 hover:bg-gray-50"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
         </Alert>
       </div>
     );
@@ -304,48 +332,48 @@ const LearningContentPage = () => {
   }
 
   return (
-    <div className="pt-20 px-4 bg-gray-100 min-h-screen">
-      <article className="max-w-5xl mx-auto space-y-8">
+    <div className="pt-20 px-4 bg-gray-50 min-h-screen pb-10">
+      <article className="max-w-4xl mx-auto space-y-6">
         {activeView === "main" && (
           <>
             {/* Main Content Card */}
-            <Card className="border-0 shadow-md bg-gray-50 rounded-lg overflow-hidden">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-200/10 to-blue-200/10" />
-                <CardHeader className="relative space-y-6 p-8">
-                  <div className="space-y-4">
-                    <CardTitle className="text-4xl font-bold text-gray-900 tracking-tight">
-                      {content.title}
-                    </CardTitle>
-                    {content.description && (
-                      <p className="text-xl text-gray-600 leading-relaxed">
-                        {content.description}
-                      </p>
-                    )}
-                  </div>
-                </CardHeader>
-              </div>
+            <Card className="border-0 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="p-8 border-b border-gray-100 bg-white">
+                <div className="space-y-2">
+                  <Badge variant="secondary" className="mb-2">
+                    Learning Guide
+                  </Badge>
+                  <CardTitle className="text-3xl font-bold text-gray-900">
+                    {content.title}
+                  </CardTitle>
+                  {content.description && (
+                    <p className="text-lg text-gray-600 leading-relaxed">
+                      {content.description}
+                    </p>
+                  )}
+                </div>
+              </CardHeader>
 
               {/* Content Sections */}
-              <CardContent className="p-8 space-y-12">
+              <CardContent className="p-8 space-y-10">
                 {content.sections?.map((section, index) => (
-                  <section key={index} className="space-y-6">
+                  <section key={index} className="space-y-4">
                     {/* Section Header */}
-                    <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-                      <div className="p-3 rounded-xl bg-gradient-to-r from-pink-500/10 to-blue-500/10 text-pink-600">
+                    <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
+                      <div className="p-2 rounded-lg bg-gray-100 text-gray-700">
                         {getIconForSection(section.type)}
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+                      <h2 className="text-xl font-bold text-gray-800">
                         {section.title}
                       </h2>
                     </div>
 
                     {/* Section Content */}
-                    <div className="space-y-8 pl-4">
+                    <div className="space-y-4 pl-1">
                       {section.content?.map((block, idx) => (
-                        <div key={idx} className="space-y-4">
+                        <div key={idx} className="space-y-2">
                           {block.subtitle && (
-                            <h3 className="text-xl font-semibold text-gray-700 mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800 mt-4 mb-2">
                               {block.subtitle}
                             </h3>
                           )}
@@ -360,14 +388,14 @@ const LearningContentPage = () => {
                 <InteractionCardsSection />
 
                 {/* Navigation Footer */}
-                <div className="flex justify-between items-center pt-8 mt-12 border-t border-gray-100">
+                <div className="flex justify-between items-center pt-6 mt-8 border-t border-gray-100">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => router.back()}
-                    className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Topics
+                    Back
                   </Button>
 
                   {topic && (
@@ -378,10 +406,10 @@ const LearningContentPage = () => {
                         setLoading(true);
                         generateContent();
                       }}
-                      className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-2"
                     >
                       <RefreshCw className="w-4 h-4" />
-                      Regenerate Content
+                      Regenerate
                     </Button>
                   )}
                 </div>
