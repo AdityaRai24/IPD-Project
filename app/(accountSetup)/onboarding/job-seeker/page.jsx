@@ -526,7 +526,7 @@ const Step3 = ({ form }) => {
 
     try {
       const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/dhgkbncpv/upload`,
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
         formData
       );
       form.setValue("resumeUrl", response.data.secure_url);
