@@ -1,8 +1,16 @@
-from flask import Flask, render_template
+# 1. These MUST be the very first lines
+import eventlet
+eventlet.monkey_patch()
+
+# 2. Then set the memory optimization
+import os
+os.environ['MALLOC_ARENA_MAX'] = '2'
+
+# 3. Finally, import Flask and other heavy libraries
+from flask import Flask
 from flask_socketio import SocketIO, emit
 import cv2
 import numpy as np
-from deepface import DeepFace
 import mediapipe as mp
 from flask_cors import CORS
 
