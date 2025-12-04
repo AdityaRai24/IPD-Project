@@ -26,7 +26,7 @@ const AddNewInterView = ({ itemContent,openDialog,setOpenDialog }) => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://localhost:3000/api/generateInterview",
+        `${process.env.NEXT_PUBLIC_API_URL}/generateInterview`,
         { topic, noOfQuestions, difficulty }
       );
       router.push(`/dashboard/jobSeeker/interview/${response.data.id}`);

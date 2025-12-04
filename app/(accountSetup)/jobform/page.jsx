@@ -80,7 +80,7 @@ const JobFormpage = () => {
         setSubmitting(true)
         data.requiredSkills = selectedOptions.map((skill) => skill.value);
         const response = await axios.post(
-          "http://localhost:3000/api/submit-job-post",
+          `${process.env.NEXT_PUBLIC_API_URL}/submit-job-post`,
           data
         );
         console.log(response)

@@ -1,0 +1,9 @@
+flask
+flask-socketio
+opencv-python-headless
+numpy
+deepface
+mediapipe
+flask-cors
+gunicorn
+eventlet

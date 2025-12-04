@@ -56,7 +56,7 @@ export default function RichTextEditor({ form, content, onEditorSave }) {
     try {
       setGeneratingDescription(true);
       const response = await axios.post(
-        `http://localhost:3000/api/generate-job-description`,
+        `${process.env.NEXT_PUBLIC_API_URL}/generate-job-description`,
         { formDetails: formValues, additionalDetails: additionalDetails }
       );
       form.setValue("jobDescription", response.data);
