@@ -123,7 +123,7 @@ const JobSeekerPage = () => {
       try {
         data.skills = data.skills.map((skill) => skill.value);
         const response = await axios.post(
-          "http://localhost:3000/api/submit-job-seeker",
+          `${process.env.NEXT_PUBLIC_API_URL}/submit-job-seeker`,
           data
         );
         if (!response.data) {

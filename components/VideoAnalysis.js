@@ -13,7 +13,7 @@ const VideoAnalysis = () => {
   });
 
   useEffect(() => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
+    const backendUrl = process.env.NEXT_PUBLIC_FLASK_URL;
     socketRef.current = io(backendUrl);
     socketRef.current.on("analysis_result", (data) => {
       setAnalysisResult(data);

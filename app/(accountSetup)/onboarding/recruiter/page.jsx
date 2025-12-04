@@ -85,7 +85,7 @@ const RecruiterPage = () => {
       setIsSubmitting(true);
       try {
         const response = await axios.post(
-          "http://localhost:3000/api/submit-recruiter",
+          `${process.env.NEXT_PUBLIC_API_URL}/submit-recruiter`,
           data
         );
         if (!response.data) {

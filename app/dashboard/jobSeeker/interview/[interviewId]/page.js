@@ -24,7 +24,7 @@ const Interview = ({ params }) => {
     try {
       const sessionId = params.interviewId;
       const response = await axios.get(
-        `http://localhost:3000/api/getInterview?sessionId=${sessionId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/getInterview?sessionId=${sessionId}`
       );
       console.log(response.data);
       setInterviewData(response.data);
