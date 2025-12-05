@@ -14,7 +14,12 @@ const VideoAnalysis = () => {
 
   useEffect(() => {
     const backendUrl = process.env.NEXT_PUBLIC_FLASK_URL;
-    socketRef.current = io(backendUrl);
+    socketRef.current = io(backendUrl, {
+      transports: ["websocket"],
+      upgrade: false,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
     socketRef.current.on("analysis_result", (data) => {
       setAnalysisResult(data);
     });
