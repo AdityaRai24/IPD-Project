@@ -6,4 +6,6 @@ numpy
 deepface
 mediapipe
 gunicorn
+# USE CPU-ONLY TENSORFLOW TO SAVE RAM
+tensorflow-cpu
 tf-keras
